@@ -49,4 +49,4 @@ end
 
 
 #Default Generator
-generateUnionFile(open("Union.cs", "w"), 2:5)
+generateUnionFile(open("../generated/Union.cs", "w"), 2:5)
