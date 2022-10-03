@@ -1,45 +1,111 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace runtime.Utils
 {
-    public struct InternedHashElement<T> {
-        public readonly T Data;
-        public int Idx;
-
-        public InternedHashElement(T data, int idx)
-        {
-            Data = data;
-            Idx = idx;
-        }
+    internal struct InternElement {
+        internal int hash;
+        internal int idx;
     }
-    internal struct InternedEqualityComparer<T> : IEqualityComparer<InternedHashElement<T>>
-    {
-        public int GetHashCode(InternedHashElement<T> obj) => obj.Data.GetHashCode();
-        public bool Equals(InternedHashElement<T> obj1, InternedHashElement<T> obj2) => obj1.Equals(obj2);
-    }
-    internal class InternedCollection<T>
-    {
-        private readonly HashSet<InternedHashElement<T>> DataCheckingSet;
-        internal readonly List<T> DataList;
 
-        public InternedCollection() {
-            DataCheckingSet = new(new InternedEqualityComparer<T>());
-            DataList = new();
-        }
-
-        public bool Contains(T data) => DataCheckingSet.Contains(new(data, 0));
+    internal class MInternElementEquality<T> : IEqualityComparer<InternElement> {
+        private MInternContainer<T> _c;
         
-        public T Get(int i) => DataList[i];
-            
-        public int Load(T data)
+        internal MInternElementEquality(MInternContainer<T> c) => _c = c;
+        public bool Equals(InternElement x, InternElement y) {
+            return x.hash == y.hash && (x.idx == -1 ? _c.checkItem.Equals(_c.Data[y.idx]) : y.idx == -1 && _c.checkItem.Equals(_c.Data[x.idx]));
+        }
+
+        public int GetHashCode(InternElement obj) => obj.hash;
+    }
+
+    public class MInternContainer<T>
+    {
+        internal HashSet<InternElement> S;
+        internal List<T> Data = new();
+        internal T checkItem;
+        
+        public MInternContainer() => S = new(new MInternElementEquality<T>(this));
+
+        public T Get(int idx) => Data[idx];
+        
+        public void Set(int idx, T v) {
+            InternElement e = new();
+            e.hash = Data[idx].GetHashCode();
+            e.idx = idx;
+            S.Remove(e);
+            Data[idx] = v;
+            e.hash = v.GetHashCode();
+            S.Add(e);
+        }
+
+        public int Load(T v)
         {
-            InternedHashElement<T> e = new(data, 0);
-            if (DataCheckingSet.TryGetValue(e, out InternedHashElement<T> v))
-                return v.Idx;
-            e.Idx = DataList.Count;
-            DataList.Add(data);
-            DataCheckingSet.Add(e);
-            return e.Idx;
+            InternElement e = new();
+            e.hash = v.GetHashCode();
+            e.idx = -1;
+            checkItem = v;
+            if (S.TryGetValue(e, out var rE))
+                return rE.idx;
+            e.idx = Data.Count;
+            Data.Add(v);
+            S.Add(e);
+            return e.idx;
+        }
+
+        public int GetIndex(T v) {
+            InternElement e = new();
+            e.hash = v.GetHashCode();
+            e.idx = -1;
+            checkItem = v;
+            if (S.TryGetValue(e, out var rE))
+                return rE.idx;
+            return -1;
+        }
+    }
+    
+    internal class UInternElementEquality<T> : IEqualityComparer<InternElement> where T: unmanaged{
+        private UInternContainer<T> _c;
+        
+        internal UInternElementEquality(UInternContainer<T> c) => _c = c;
+        public bool Equals(InternElement x, InternElement y) {
+            return x.hash == y.hash && (x.idx == -1 ? _c.CheckItem.Equals(_c.Data[y.idx]) : y.idx == -1 && _c.CheckItem.Equals(_c.Data[x.idx]));
+        }
+
+        public int GetHashCode(InternElement obj) => obj.hash;
+    }
+    
+    public class UInternContainer<T> where T: unmanaged
+    {
+        internal HashSet<InternElement> S;
+        internal UnsafeList<T> Data = new();
+        internal T CheckItem = default;
+        
+        public UInternContainer() => S = new(new UInternElementEquality<T>(this));
+
+        public ref T Get(int idx) => ref Data.GetRef(idx);
+
+        public void Set(int idx, T v) {
+            InternElement e = new();
+            e.hash = Data[idx].GetHashCode();
+            e.idx = idx;
+            S.Remove(e);
+            Data[idx] = v;
+            e.hash = v.GetHashCode();
+            S.Add(e);
+        }
+        
+        public int Load(T v) {
+            InternElement e = new();
+            e.hash = v.GetHashCode();
+            e.idx = -1;
+            CheckItem = v;
+            if (S.TryGetValue(e, out var rE))
+                return rE.idx;
+            e.idx = Data.Count;
+            Data.Add(v);
+            S.Add(e);
+            return e.idx;
         }
     }
 }

@@ -1,98 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
+﻿using System.Linq;
 using Antlr4.Runtime.Tree;
 using HyperSphere;
 using runtime.core;
-using runtime.core.Abstract;
-using runtime.core.Dynamic;
-using runtime.core.Dynamic.JIL;
-using runtime.core.Static;
+using runtime.core.JIL;
 using runtime.ILCompiler;
-using runtime.interop;
 
 namespace runtime.parse
 {
-/*
-    internal class ExprFrame
-    {
-        public JTypeBuilder Expr;
-        public JRuntimeModule Module;
-        public bool LastExpr;
-        public Dictionary<string, LocalBuilder> Locals = new();
+    internal class ExprFrame {
+        public IJType Type;
+        public IJModule Module;
+        public IJExpr Expr;
 
-        internal ExprFrame(JTypeBuilder expr, JRuntimeModule module, bool isLastExpr) {
-            LastExpr = isLastExpr;
+        internal ExprFrame(IJType type, IJModule module, IJExpr expr) {
             Module = module;
             Expr = expr;
+            Type = type;
         }
     }
-    
-    
+
     internal class JuliaStaticCompiler {
         private JuliappParser _p;
-        private JExecutionModule _e;
 
-        internal JuliaStaticCompiler(JExecutionModule e) => _e = e;
-
-        public JFunction Compile(JuliappParser p) {
+        public JILModuleExpr Compile(JuliappParser p, IJModule evaluationModule) {
             _p = p;
             _p.Print();
-            return Compile(_p.script);
+            return Compile(_p.script, evaluationModule);
         }
 
-        public void Compile(JuliaParser.ModuleVariableDeclarationContext ctx, ExprFrame frame) {
-            bool isConst = ctx.Const() != null;
-            bool isGlobal = ctx.Local() == null;
-            var name = Compile(ctx.blockArg().Identifier());
-            Type type = ctx.blockArg().type() == null ? typeof(JObject) : FindType(Compile(ctx.blockArg().type().Identifier()), frame.Module);
-            
-            if (isGlobal)
-                frame.Module.CreateGlobal(name, type, isConst);
-            else
-                frame.Locals.Add(name, frame.Expr.Create.Local(type));
+        public IJType Compile(JuliaParser.TypeContext ctx, ExprFrame frame) {
+            frame.Expr.GetName(Compile(ctx.Identifier()), out IJType result, true);
+            return result;
         }
 
-        public void Compile(JuliaParser.BlockVariableDeclarationContext ctx, ExprFrame frame) {
-            
+        public void CompileField(ITerminalNode nameID, JuliaParser.TypeContext type, ExprFrame frame, bool isConst, bool isGlobal) {
+            IJField f = new JILFieldBuilder();
+            f.Name = Compile(nameID);
+            f.IsConst = isConst;
+            f.IsGlobal = isGlobal;
+            f.Type = Compile(type, frame);
+            ((JILExprBuilder) frame.Expr).AddVariable(f);
         }
 
         public void Compile(JuliaParser.BlockExprContext ctx, ExprFrame frame) {
-            if (ctx.blockVariableDeclaration() != null) 
-                Compile(ctx.blockVariableDeclaration(), frame);
-            else if (ctx.functionCall() != null) 
+            if (ctx.blockVariableDeclaration() != null) {
+                var bctx = ctx.blockVariableDeclaration();
+                CompileField(bctx.blockArg().Identifier(), bctx.blockArg().type(), 
+                    frame, bctx.Const() != null, bctx.Local() == null);
+            } else if (ctx.functionCall() != null) 
                 Compile(ctx.functionCall(), frame);
         }
 
-        public void Compile(JuliaParser.StructFieldContext ctx, ILTypeBuilder b, ExprFrame frame) {
-            var name = Compile(ctx.blockArg().Identifier());
-            var ty = FindType(Compile(ctx.blockArg().type().Identifier()), b._m);
-            b.CreateField(name, ty, ctx.Const() != null);
-        }
-
         public void Compile(JuliaParser.ModuleContext ctx, ExprFrame frame) {
-            var modName = Compile(ctx.Identifier());
-            JModule m = new(frame.Module, modName);
-            
-            ILTypeBuilder modBuilder = frame.Module.CreateType(modName, JStructType.Module, null);
-            var modExpr = modBuilder.TypeInitializer;
-        //    Bootstrap.CreateModuleTypeHandle(modExpr, modBuilder, frame.Module, modName);
-            
+            var mod = new JILModuleBuilder();
+            mod.Name = Compile(ctx.Identifier());
+            mod.ParentModule = frame.Module;
             if (ctx.moduleExpr() != null) {
-                var arr = ctx.moduleExpr();
-                ExprFrame frame2 = new(modExpr, m, true);
-                for (int i = 0, n = arr.Length, e = n - 1; i < n; i++) {
-                    frame2.LastExpr = i == e;
-                    Compile(arr[i], frame2);
-                }
+                ExprFrame frame2 = new(null, mod, mod);
+                foreach(var v in ctx.moduleExpr())
+                    Compile(v, frame2);
             }
-            
-            m.InternalType = modBuilder.Create();
+            mod.Create();
         }
 
-        public void Compile(JuliaParser.FunctionContext ctx, ILTypeBuilder type, ExprFrame frame) {
-         
+        public void Compile(JuliaParser.FunctionContext ctx, ExprFrame frame) {
+            
         }
 
         public string Compile(ITerminalNode n) => n.GetText();
@@ -104,45 +76,40 @@ namespace runtime.parse
             }
             else ExtendedTypeName = null;
         }
+        
         public void Compile(JuliaParser.StructureContext ctx, ExprFrame frame)
         {
-            bool isLastExpr = frame.LastExpr;
-            frame.LastExpr = false;
-            Compile(ctx.typeName(), out string name, out JlType extendedType);
-            if (frame.Module.ContainsName(name))
-                 throw new JuliaException("Module Already Contains Name:" + name);
-            JStructType type = JStructType.Invalid;
-           
-            if (ctx.abstractStructure() != null)
-                type = JStructType.AbstractType;
-            else if (ctx.implementedStructure() != null)
-                type = ctx.implementedStructure().Mutable() != null ? JStructType.MutableStruct : JStructType.Struct;
-           
-            var b = frame.Module.CreateType(name, type, extendedType);
-            Bootstrap.CreateTypeHandle(b.TypeInitializer, b, frame.Module, name);
+            string name = Compile(ctx.typeName().Identifier());
+            JTypeType typetype = JTypeType.None;
             
+            
+            if (ctx.abstractStructure() != null)
+                typetype = JTypeType.Abstract;
+            else if (ctx.implementedStructure() != null)
+                typetype = ctx.implementedStructure().Mutable() != null ? JTypeType.Mutable : JTypeType.Struct;
+
+            IJType tb = new JILTypeBuilder();
+            tb.Type = typetype;
+            tb.Name = name;
+            frame.Type = tb;
             foreach (var item in ctx.structItem()) {
                 if (item.function() != null) {
-                    Compile(item.function(), b, frame);
-                }else
-                    Compile(item.structField(), b, frame);
+                    Compile(item.function(), frame);
+                }else {
+                    var sctx = item.structField();
+                    CompileField(sctx.blockArg().Identifier(), sctx.blockArg().type(), frame, false, false);
+                }
             }
-            
-            var ty = b.Create();
-            Bootstrap.CreateGlobalDefinitionCall(frame.Expr, frame.Module, name, ty, true);
-
-            if (isLastExpr) {
-                Bootstrap.CreateJTypeOf(frame.Expr, ty);
-                frame.Expr.Return();
-                var generator = new Lokad.ILPack.AssemblyGenerator();
-                generator.GenerateAssembly(Julia.MAIN._M.Assembly, "test.dll");
-            }
+            frame.Type = null;
         }
         public void Compile(JuliaParser.UsingModuleContext ctx, ExprFrame frame) {
             var ids = ctx.moduleRef().Identifier();
             var str = ctx.moduleRef().GetText().Substring(5);
-            frame.Module.UseModule(JModule.GetModule(str, ids.Select(x => x.GetText()).ToArray()));
+            ModuleReference r = new();
+            r.Name = str;
+            ((JILExprBuilder) frame.Expr).AddReference(r);
         }
+        
         public object Compile(JuliaParser.FunctionCallContext ctx, ExprFrame frame) => null;
         public void Compile(JuliaParser.ModuleExprContext ctx, ExprFrame frame) {
             if (ctx.usingModule() != null)
@@ -153,38 +120,24 @@ namespace runtime.parse
                 Compile(ctx.blockExpr(), frame);
             else if (ctx.structure() != null)
                 Compile(ctx.structure(), frame);
-            else if (ctx.moduleVariableDeclaration() != null)
-                Compile(ctx.moduleVariableDeclaration(), frame);
+            else if (ctx.moduleVariableDeclaration() != null) {
+                var mvd = ctx.moduleVariableDeclaration();
+                CompileField(mvd.blockArg().Identifier(), mvd.blockArg().type(), frame, mvd.Const() != null, mvd.Local() == null);
+            }
         }
         
-        public JFunction Compile(JuliaParser.ScriptContext ctx) {
-            
-            ExprFrame frame = new(expr, _e, true);
+        public JILModuleExpr Compile(JuliaParser.ScriptContext ctx, IJModule evaluationModule) {
+            JILModuleExprBuilder eb = new JILModuleExprBuilder();
+            ExprFrame frame = new(null, evaluationModule, eb);
             
             if (ctx.moduleExpr() != null)
                 Compile(ctx.moduleExpr(), frame);
             else {
-                var arr = ctx.moduleExprStatement();
-                for (int i = 0, n = arr.Length, e = n - 1; i < n; i++) {
-                    frame.LastExpr = i == e;
-                    Compile(arr[i].moduleExpr(), frame);
-                }
+                foreach(var v in ctx.moduleExprStatement())
+                    Compile(v.moduleExpr(), frame);
             }
             
-            return dynMet.CreateDelegate<JuliaExpression>();
+            return eb.Create();
         }
-
-        public Type FindType(string name, JModule m) {
-            name = name.Contains(".") ? name.Substring(name.LastIndexOf(".")) : name;
-            if (m.GetType(name, out Type t))
-                return t;
-            
-            Type g = Type.GetType(name);
-
-            if (g != null)
-                return g;
-            
-            throw new JuliaException("Unable To Find Type \"" + name + "\"");
-        }
-    }*/
+    }
 }

@@ -3,11 +3,22 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Antlr4.Runtime.Standard" Version="4.10.1" />
       <PackageReference Include="Lokad.ILPack" Version="0.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="core\Containers" />
+      <Folder Include="Utils\generated" />
+      <Folder Include="Utils\generators" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="core\Containers\AbstractInterfaces.cs" />
     </ItemGroup>
 
 </Project>

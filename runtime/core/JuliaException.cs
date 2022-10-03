@@ -5,16 +5,27 @@ namespace runtime.core
 {
     public class JuliaException : Exception
     {
-        public JuliaException(string message) => Message = message;
-        public JuliaException() => Message = "";
+        protected readonly string _message;
+        public JuliaException(string message) => _message = message;
+        public JuliaException() => _message = "";
         
         public JuliaException(params object[] messages) {
             StringBuilder sb = new StringBuilder();
             foreach(var v in messages)
                 sb.Append(v);
-            Message = sb.ToString();
+            _message = sb.ToString();
         }
 
-        public override string Message { get; }
+        public override string Message => _message;
+    }
+
+    public class InternalJuliaException : JuliaException
+    {
+        public InternalJuliaException(string message) : base(message){}
+        public InternalJuliaException() : base(){}
+        
+        public InternalJuliaException(params object[] messages) : base(messages){}
+        
+        public override string Message => "Internal Julia Exception. Please report this exception!\n" + _message;
     }
 }
