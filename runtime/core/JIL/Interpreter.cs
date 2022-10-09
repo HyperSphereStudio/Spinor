@@ -1,4 +1,4 @@
-﻿namespace runtime.core.Dynamic;
+﻿namespace runtime.core.JIL;
 
 public class JILInterpreter
 {

@@ -132,15 +132,15 @@ public interface IJuliaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitAbstractStructure([NotNull] JuliaParser.AbstractStructureContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Enter a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context);
+	void EnterCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Exit a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context);
+	void ExitCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="JuliaParser.structure"/>.
 	/// </summary>

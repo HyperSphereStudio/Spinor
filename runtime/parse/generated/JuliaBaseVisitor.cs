@@ -136,7 +136,7 @@ public partial class JuliaBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitAbstractStructure([NotNull] JuliaParser.AbstractStructureContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Visit a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -144,7 +144,7 @@ public partial class JuliaBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context) { return VisitChildren(context); }
+	public virtual Result VisitCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="JuliaParser.structure"/>.
 	/// <para>

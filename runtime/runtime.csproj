@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="core\Containers" />
+      <Folder Include="core\JIL\generated" />
       <Folder Include="Utils\generated" />
       <Folder Include="Utils\generators" />
     </ItemGroup>

@@ -69,7 +69,7 @@ namespace runtime.Utils
         
         internal UInternElementEquality(UInternContainer<T> c) => _c = c;
         public bool Equals(InternElement x, InternElement y) {
-            return x.hash == y.hash && (x.idx == -1 ? _c.CheckItem.Equals(_c.Data[y.idx]) : y.idx == -1 && _c.CheckItem.Equals(_c.Data[x.idx]));
+            return x.hash == y.hash && (x.idx == -1 ? _c.CheckItem.Equals(_c._data[y.idx]) : y.idx == -1 && _c.CheckItem.Equals(_c._data[x.idx]));
         }
 
         public int GetHashCode(InternElement obj) => obj.hash;
@@ -77,22 +77,22 @@ namespace runtime.Utils
     
     public class UInternContainer<T> where T: unmanaged
     {
-        internal HashSet<InternElement> S;
-        internal UnsafeList<T> Data = new();
+        private readonly HashSet<InternElement> _s;
+        internal readonly UnsafeList<T> _data = new();
         internal T CheckItem = default;
         
-        public UInternContainer() => S = new(new UInternElementEquality<T>(this));
+        public UInternContainer() => _s = new(new UInternElementEquality<T>(this));
 
-        public ref T Get(int idx) => ref Data.GetRef(idx);
+        public ref T Get(int idx) => ref _data.GetRef(idx);
 
         public void Set(int idx, T v) {
             InternElement e = new();
-            e.hash = Data[idx].GetHashCode();
+            e.hash = _data[idx].GetHashCode();
             e.idx = idx;
-            S.Remove(e);
-            Data[idx] = v;
+            _s.Remove(e);
+            _data[idx] = v;
             e.hash = v.GetHashCode();
-            S.Add(e);
+            _s.Add(e);
         }
         
         public int Load(T v) {
@@ -100,12 +100,13 @@ namespace runtime.Utils
             e.hash = v.GetHashCode();
             e.idx = -1;
             CheckItem = v;
-            if (S.TryGetValue(e, out var rE))
+            if (_s.TryGetValue(e, out var rE))
                 return rE.idx;
-            e.idx = Data.Count;
-            Data.Add(v);
-            S.Add(e);
+            e.idx = _data.Count;
+            _data.Add(v);
+            _s.Add(e);
             return e.idx;
         }
+        
     }
 }

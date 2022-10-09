@@ -93,11 +93,11 @@ public interface IJuliaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitAbstractStructure([NotNull] JuliaParser.AbstractStructureContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Visit a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context);
+	Result VisitCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="JuliaParser.structure"/>.
 	/// </summary>

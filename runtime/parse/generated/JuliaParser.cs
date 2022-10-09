@@ -52,7 +52,7 @@ public partial class JuliaParser : Parser {
 		RULE_script = 0, RULE_moduleExpr = 1, RULE_moduleVariableDeclaration = 2, 
 		RULE_module = 3, RULE_moduleExprStatement = 4, RULE_usingModule = 5, RULE_moduleRef = 6, 
 		RULE_moduleIdentifier = 7, RULE_symbolIdentifier = 8, RULE_abstractStructure = 9, 
-		RULE_implementedStructure = 10, RULE_structure = 11, RULE_structField = 12, 
+		RULE_compositeStructure = 10, RULE_structure = 11, RULE_structField = 12, 
 		RULE_structItem = 13, RULE_blockExpr = 14, RULE_blockExprStatement = 15, 
 		RULE_blockVariableInstatiation = 16, RULE_blockArg = 17, RULE_blockVariableDeclaration = 18, 
 		RULE_function = 19, RULE_functionHeader = 20, RULE_functionItem = 21, 
@@ -62,7 +62,7 @@ public partial class JuliaParser : Parser {
 	public static readonly string[] ruleNames = {
 		"script", "moduleExpr", "moduleVariableDeclaration", "module", "moduleExprStatement", 
 		"usingModule", "moduleRef", "moduleIdentifier", "symbolIdentifier", "abstractStructure", 
-		"implementedStructure", "structure", "structField", "structItem", "blockExpr", 
+		"compositeStructure", "structure", "structField", "structItem", "blockExpr", 
 		"blockExprStatement", "blockVariableInstatiation", "blockArg", "blockVariableDeclaration", 
 		"function", "functionHeader", "functionItem", "functionCall", "shortFunction", 
 		"longFunction", "tuple", "namedTuple", "typetuple", "tupleList", "typeName", 
@@ -845,36 +845,36 @@ public partial class JuliaParser : Parser {
 		return _localctx;
 	}
 
-	public partial class ImplementedStructureContext : ParserRuleContext {
+	public partial class CompositeStructureContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode Struct() { return GetToken(JuliaParser.Struct, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode Mutable() { return GetToken(JuliaParser.Mutable, 0); }
-		public ImplementedStructureContext(ParserRuleContext parent, int invokingState)
+		public CompositeStructureContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_implementedStructure; } }
+		public override int RuleIndex { get { return RULE_compositeStructure; } }
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void EnterRule(IParseTreeListener listener) {
 			IJuliaListener typedListener = listener as IJuliaListener;
-			if (typedListener != null) typedListener.EnterImplementedStructure(this);
+			if (typedListener != null) typedListener.EnterCompositeStructure(this);
 		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override void ExitRule(IParseTreeListener listener) {
 			IJuliaListener typedListener = listener as IJuliaListener;
-			if (typedListener != null) typedListener.ExitImplementedStructure(this);
+			if (typedListener != null) typedListener.ExitCompositeStructure(this);
 		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IJuliaVisitor<TResult> typedVisitor = visitor as IJuliaVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitImplementedStructure(this);
+			if (typedVisitor != null) return typedVisitor.VisitCompositeStructure(this);
 			else return visitor.VisitChildren(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public ImplementedStructureContext implementedStructure() {
-		ImplementedStructureContext _localctx = new ImplementedStructureContext(Context, State);
-		EnterRule(_localctx, 20, RULE_implementedStructure);
+	public CompositeStructureContext compositeStructure() {
+		CompositeStructureContext _localctx = new CompositeStructureContext(Context, State);
+		EnterRule(_localctx, 20, RULE_compositeStructure);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
@@ -914,8 +914,8 @@ public partial class JuliaParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public AbstractStructureContext abstractStructure() {
 			return GetRuleContext<AbstractStructureContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ImplementedStructureContext implementedStructure() {
-			return GetRuleContext<ImplementedStructureContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public CompositeStructureContext compositeStructure() {
+			return GetRuleContext<CompositeStructureContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public StructItemContext[] structItem() {
 			return GetRuleContexts<StructItemContext>();
@@ -967,7 +967,7 @@ public partial class JuliaParser : Parser {
 			case Struct:
 				{
 				State = 140;
-				implementedStructure();
+				compositeStructure();
 				}
 				break;
 			default:

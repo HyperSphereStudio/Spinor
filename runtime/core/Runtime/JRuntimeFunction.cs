@@ -1,25 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using runtime.core.Containers;
 using runtime.core.JIL;
+using runtime.Utils;
 
-namespace runtime.core.Dynamic;
+namespace runtime.core.Runtime;
 
-public sealed class JRuntimeMethod : JILMethod{
-    internal JRuntimeMethod(JILMethod m) : base(m.Name, m.MethodModifiers, m.Parameters.ToArray(),
-        m.Modifiers, m.Code.ToArray(), m.Variables.ToArray()) {}
+public sealed class JRuntimeJILMethod : JILMethod{
+    internal JRuntimeJILMethod(JILMethod j, JRuntimeModule parent) : 
+        base(j.MethodModifiers, j.Parameters, j.Modifiers, j.Code, j.VarTable, j.Names, parent) {}
 }
 
 public sealed class JRuntimeFunction : IJFunction
 {
-    private readonly string _name;
-    private readonly List<JRuntimeMethod> _methods = new(1);
-
-    internal JRuntimeFunction(JRuntimeMethod m) {
-        _methods[0] = m;
-        _name = m.Name;
+    private readonly string name;
+    private readonly List<IJMethod> _methods;
+    public string Name => name;
+    
+    internal JRuntimeFunction(string name, IJMethod[] mts) {
+        name = name;
+        _methods = new(mts);
     }
 
-    public string Name { get => _name; set => throw new NotSupportedException(); }
-    public IContainer<JRuntimeMethod> Methods => new JList<JRuntimeMethod>(_methods);
+    public bool VisitMethods(Func<IJMethod, bool> v) => _methods.Visit(v);
+
+    public object Invoke(object[] parameters)
+    {
+        return null;
+    }
 }

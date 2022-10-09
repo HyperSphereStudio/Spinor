@@ -1,200 +1,152 @@
 ﻿global using JStringRef = System.Int32;
-global using JMemoryRef = System.Int32;
 using System;
+using runtime.Utils;
 
 namespace runtime.core.JIL;
 
 public readonly struct JNameRef {
-    public readonly int HeightToExprName;
-    public readonly int ExprNameIndex;
+    public readonly int CompileTimeNameRefIndex;
+    public readonly ushort CompileTimeExprStackDelta;
 
-    internal JNameRef(int heightToExprName, int exprNameIndex) {
-        HeightToExprName = heightToExprName;
-        ExprNameIndex = exprNameIndex;
+    public JNameRef(int nameRefIndex, ushort stackDelta) {
+        CompileTimeNameRefIndex = nameRefIndex;
+        CompileTimeExprStackDelta = stackDelta;
     }
 }
 
-public readonly struct JILSimpleVec<T> where T: unmanaged{
-    public readonly JMemoryRef Index;
-
-    public JILSimpleVec(JMemoryRef i) => Index = i;
+public class JILExpr : IJExpr {
+    private readonly JExprFlags _modifiers;
+    public readonly byte[] Code;
+    public readonly JNameRef[] VarTable;
+    public readonly JILField[] Names;
+    internal IJExpr iparent;
     
-    public unsafe T* GetPtr(IJCodeContext ctx, out int length) {
-        var ptr = ctx.GetMemory<int>(Index);
-        length = *ptr++;
-        return (T*)ptr;
+    public JExprFlags Modifiers => _modifiers;
+    public IJExpr Parent => iparent;
+
+    public bool VisitVariables(Func<IJField, bool> v) {
+        foreach (var va in VarTable) {
+            if (!v(Names[va.CompileTimeNameRefIndex]))
+                return false;
+        }
+        return true;
     }
-}
 
-public struct JILExpr {
-    public readonly JExprFlags Modifiers;
-    public readonly JILSimpleVec<JOp> Code;
+    public bool VisitNames(Func<IJField, object, bool> v) {
+        for(int i = 0; i < Names.Length; i++)
+            if (!v(Names[i], null))
+                return false;
+        return true;
+    }
     
-    public readonly JILSimpleVec<JILField> VarTable;
 
-    internal JILExpr(JExprFlags modifiers, JILSimpleVec<JOp> code, JILSimpleVec<JILField> variables) {
-        Modifiers = modifiers;
+    IJField IJExpr.GetNameFieldImpl(JNameRef nameRef) => Names[nameRef.CompileTimeNameRefIndex];
+    
+    bool IJExpr.GetNameRefImpl(string name, out JNameRef nameRef) => throw new NotImplementedException();
+
+    internal JILExpr(JExprFlags modifiers, byte[] code, JNameRef[] variables, JILField[] names, IJExpr iparent)
+    {
+        _modifiers = modifiers;
         Code = code;
         VarTable = variables;
+        Names = names;
+        this.iparent = iparent;
     }
 }
 
-public readonly unsafe struct JILExprReader : IJExpr {
-    private readonly JILExpr* _expr;
-    private readonly IJCodeContext _ctx;
+public class JILMethod : JILExpr, IJMethod
+{
+    private readonly JMethodFlags _methodModifiers;
+    public readonly JNameRef[] Parameters;
 
-    public JILExprReader(JILExpr* expr, IJCodeContext ctx) {
-        _expr = expr;
-        _ctx = ctx;
-    }
-    
-    public JExprFlags Modifiers => _expr->Modifiers;
-
-    public JILField* GetField(JNameRef r) {
-        var name = _ctx.GetNameName(r);
-        var ptr = _expr->VarTable.GetPtr(_ctx, out int len);
-
-        for (int i = 0; i < len; i++) {
-            var p = ptr++;
-            if (name == p->Name)
-                return p;
+    public JMethodFlags MethodModifiers => _methodModifiers;
+    public bool VisitParameters(Func<IJField, bool> v) {
+        var names = Names;
+        foreach (var va in Parameters) {
+            if (!v(names[va.CompileTimeNameRefIndex]))
+                return false;
         }
-        
-        return null;
+        return true;
     }
 
-    public void VisitVariables(Action<IJField> v) {
-        var ptr = _expr->VarTable.GetPtr(_ctx, out int len);
-        var fr = new JILFieldReader(ptr, _ctx);
-        for (int i = 0; i < len; i++, fr.MoveNext())
-            v(fr);
-    }
-}
+    public bool ShouldInline => _methodModifiers.HasFlag(JMethodFlags.Inline);
 
-public struct JILMethod {
-    public readonly JMethodFlags MethodModifiers;
-    public readonly JILSimpleVec<JILField> Parameters;
-    public readonly JILExpr Expr;
-
-    internal JILMethod(JMethodFlags methodModifiers, JILSimpleVec<JILField> parameters, JILExpr expr){
-        MethodModifiers = methodModifiers;
+    internal JILMethod(JMethodFlags methodModifiers, JNameRef[] parameters, 
+            JExprFlags modifiers, byte[] code, JNameRef[] variables, JILField[] names, IJExpr iparent) : base(modifiers, code, variables, names, iparent) {
+        _methodModifiers = methodModifiers;
         Parameters = parameters;
-        Expr = expr;
-    }
-    
-    public bool ShouldInline => MethodModifiers.HasFlag(JMethodFlags.Inline);
-}
-
-public unsafe struct JILMethodReader : IJMethod{
-    private JILMethod* _expr;
-    private readonly IJCodeContext _ctx;
-
-    public JILMethodReader(JILMethod* expr, IJCodeContext ctx) {
-        _expr = expr;
-        _ctx = ctx;
-    }
-
-    public JILExpr* Expr => &_expr->Expr;
-    public JExprFlags Modifiers => Expr->Modifiers;
-    public JMethodFlags MethodModifiers => _expr->MethodModifiers;
-
-    public void MoveNext() => _expr++;
-
-    public void VisitVariables(Action<IJField> v) => new JILExprReader(Expr, _ctx).VisitVariables(v);
-    
-    public void VisitParameters(Action<IJField> v) {
-        var ptr = _expr->Parameters.GetPtr(_ctx, out int len);
-        var fr = new JILFieldReader(ptr, _ctx);
-        for (int i = 0; i < len; i++, fr.MoveNext())
-            v(fr);
     }
 }
 
-public struct JILField{
-    public readonly JStringRef Name;
-    public readonly JFieldFlags Modifiers;
-    public JNameRef Type;
+public struct JILField : IJField {
+    public readonly JStringRef NameRef;
+    private readonly JFieldFlags _modifiers;
+    public readonly JNameRef TypeRef;
+    internal IJExpr iparent;
 
-    internal JILField(JStringRef name, JFieldFlags modifiers, JNameRef type)
-    {
-        Name = name;
-        Modifiers = modifiers;
-        Type = type;
+    public string Name => iparent.Context.GetString(NameRef);
+    public IJType Type => throw new NotSupportedException();
+    public JFieldFlags Modifiers => _modifiers;
+    public IJExpr Parent => iparent;
+
+    internal JILField(JStringRef name, JFieldFlags modifiers, JNameRef type, IJExpr iparent) {
+        NameRef = name;
+        _modifiers = modifiers;
+        TypeRef = type;
+        this.iparent = iparent;
     }
 }
 
-public unsafe class JILFieldReader : IJField{
-    private JILField* _baseField;
-    private readonly IJCodeContext _ctx;
+public class JILType : IJType{
+    public readonly JStringRef NameRef;
+    private readonly JTypeType _type;
+    public readonly JILField[] Fields;
+    public readonly JILMethod[] Constructors;
+    internal IJModule iparent;
 
-    public JILFieldReader(JILField* fr, IJCodeContext ctx) {
-        _baseField = fr;
-        _ctx = ctx;
-    }
-
-    internal void MoveNext() => _baseField++;
-
-    public string Name => _ctx.GetString(_baseField->Name);
-    public IJType Type => _ctx.GetNameV<IJType>(_baseField->Type);
-    public JFieldFlags Modifiers => _baseField->Modifiers;
-}
-
-public struct JILType{
-    public readonly JStringRef Name;
-    public readonly JTypeType Type;
-    public readonly JILSimpleVec<JILField> Fields;
-    public readonly JILSimpleVec<JILMethod> Constructors;
-
-    internal JILType(JStringRef name, JTypeType type, JILSimpleVec<JILField> fields, JILSimpleVec<JILMethod> constructors) {
-        Name = name; 
-        Type = type;
+    internal JILType(JStringRef name, JTypeType type, JILField[] fields, JILMethod[] constructors, IJModule iparent) {
+        NameRef = name;
+        _type = type;
         Fields = fields;
         Constructors = constructors;
+        this.iparent = iparent;
+    }
+
+    public string Name => iparent.Context.GetString(NameRef);
+    public JTypeType Type => _type;
+    public JExprFlags Modifiers => JExprFlags.None;
+    public IJExpr Parent => iparent;
+    public IJModule Module => iparent;
+    public bool VisitVariables(Func<IJField, bool> v) => true;
+
+    IJField IJExpr.GetNameFieldImpl(JNameRef nameRef) => Fields[nameRef.CompileTimeNameRefIndex];
+    bool IJExpr.GetNameRefImpl(string name, out JNameRef nameRef) => throw new NotImplementedException();
+    public bool VisitFields(Func<IJField, bool> v) => Fields.Visit(x => v(x));
+    public bool VisitConstructors(Func<IJMethod, bool> v) => Constructors.Visit(x => v(x));
+    
+    public bool VisitNames(Func<IJField, object, bool> v) {
+        for(int i = 0; i < Fields.Length; i++)
+            if (!v(Fields[i], null))
+                return false;
+        return true;
     }
 }
 
-public readonly unsafe struct JILTypeReader : IJType
-{
-    private readonly JILType* _baseType;
-    private readonly IJCodeContext _ctx;
-
-    public JILTypeReader(JILType* fr, IJCodeContext ctx) {
-        _baseType = fr;
-        _ctx = ctx;
-    }
-
-    public string Name => _ctx.GetString(_baseType->Name);
-    public JTypeType Type => _baseType->Type;
-    public void VisitFields(Action<IJField> v) {
-        var ptr = _baseType->Fields.GetPtr(_ctx, out int len);
-        var fr = new JILFieldReader(ptr, _ctx);
-        for (int i = 0; i < len; i++, fr.MoveNext())
-            v(fr);
-    }
-
-    public void VisitConstructors(Action<IJMethod> v) {
-        var ptr = _baseType->Constructors.GetPtr(_ctx, out int len);
-        var mr = new JILMethodReader(ptr, _ctx);
-        for (int i = 0; i < len; i++, mr.MoveNext())
-            v(mr);
-    }
-}
-
-public sealed class JILModule : IJModule
+public sealed class JILModule : JILExpr, IJModule
 {
     private readonly JStringRef _name;
-    private readonly IJCodeContext _ctx;
+    internal IJCodeContext _ctx;
     private readonly JModuleFlags _mflags;
-    private readonly JILExpr _moduleExpr;
 
-    internal JILModule(JStringRef name, IJCodeContext ctx, JModuleFlags flags, JILExpr moduleExpr) {
+    internal JILModule(JStringRef name, JModuleFlags flags, 
+        JExprFlags modifiers, byte[] code, JNameRef[] variables, JILField[] names, IJExpr iparent) : base(modifiers, code, variables, names, iparent) {
         _name = name;
-        _ctx = ctx;
         _mflags = flags;
-        _moduleExpr = moduleExpr;
+        this.iparent = iparent;
     }
 
     public string Name => _ctx.GetString(_name);
+    
     public JModuleFlags ModuleModifiers => _mflags;
-    public IJCodeContext Context => _ctx;
+    public bool GetNameV<T>(JNameRef r, out T t) => throw new NotSupportedException();
 }

@@ -157,17 +157,17 @@ public partial class JuliaBaseListener : IJuliaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAbstractStructure([NotNull] JuliaParser.AbstractStructureContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Enter a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context) { }
+	public virtual void EnterCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="JuliaParser.implementedStructure"/>.
+	/// Exit a parse tree produced by <see cref="JuliaParser.compositeStructure"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitImplementedStructure([NotNull] JuliaParser.ImplementedStructureContext context) { }
+	public virtual void ExitCompositeStructure([NotNull] JuliaParser.CompositeStructureContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="JuliaParser.structure"/>.
 	/// <para>The default implementation does nothing.</para>

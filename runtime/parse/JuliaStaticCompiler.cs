@@ -1,45 +1,42 @@
-﻿using System.Linq;
+﻿using System;
 using Antlr4.Runtime.Tree;
 using HyperSphere;
 using runtime.core;
 using runtime.core.JIL;
-using runtime.ILCompiler;
+using runtime.core.Runtime;
 
 namespace runtime.parse
 {
     internal class ExprFrame {
-        public IJType Type;
-        public IJModule Module;
-        public IJExpr Expr;
+        public JILTypeBuilder Type;
+        public JILModuleBuilder Module;
+        public JILExprBuilder Expr;
 
-        internal ExprFrame(IJType type, IJModule module, IJExpr expr) {
+        internal ExprFrame(JILTypeBuilder type, JILModuleBuilder module, JILExprBuilder expr) {
             Module = module;
             Expr = expr;
             Type = type;
         }
     }
 
-    internal class JuliaStaticCompiler {
+    internal struct JuliaStaticCompiler {
         private JuliappParser _p;
 
-        public JILModuleExpr Compile(JuliappParser p, IJModule evaluationModule) {
+        public JRuntimeExpr Compile(JuliappParser p, JRuntimeModule evaluationModule) {
             _p = p;
             _p.Print();
             return Compile(_p.script, evaluationModule);
         }
-
-        public IJType Compile(JuliaParser.TypeContext ctx, ExprFrame frame) {
-            frame.Expr.GetName(Compile(ctx.Identifier()), out IJType result, true);
-            return result;
-        }
-
-        public void CompileField(ITerminalNode nameID, JuliaParser.TypeContext type, ExprFrame frame, bool isConst, bool isGlobal) {
-            IJField f = new JILFieldBuilder();
-            f.Name = Compile(nameID);
+        
+        public JILFieldBuilder CompileField(ITerminalNode nameID, JuliaParser.TypeContext type, ExprFrame frame, bool isConst, bool isGlobal) {
+            var f = new JILFieldBuilder(Compile(nameID), frame.Expr);
             f.IsConst = isConst;
             f.IsGlobal = isGlobal;
-            f.Type = Compile(type, frame);
-            ((JILExprBuilder) frame.Expr).AddVariable(f);
+
+            var ty = type != null ? Compile(type.Identifier()) : "Any";
+            f.TypeRef = (frame.Expr as IJExpr).GetNameRef(ty);
+
+            return f;
         }
 
         public void Compile(JuliaParser.BlockExprContext ctx, ExprFrame frame) {
@@ -51,10 +48,9 @@ namespace runtime.parse
                 Compile(ctx.functionCall(), frame);
         }
 
-        public void Compile(JuliaParser.ModuleContext ctx, ExprFrame frame) {
-            var mod = new JILModuleBuilder();
-            mod.Name = Compile(ctx.Identifier());
-            mod.ParentModule = frame.Module;
+        public void Compile(JuliaParser.ModuleContext ctx, ExprFrame frame)
+        {
+            var mod = frame.Module.DefineModule(Compile(ctx.Identifier()));
             if (ctx.moduleExpr() != null) {
                 ExprFrame frame2 = new(null, mod, mod);
                 foreach(var v in ctx.moduleExpr())
@@ -81,33 +77,33 @@ namespace runtime.parse
         {
             string name = Compile(ctx.typeName().Identifier());
             JTypeType typetype = JTypeType.None;
-            
-            
+
             if (ctx.abstractStructure() != null)
                 typetype = JTypeType.Abstract;
-            else if (ctx.implementedStructure() != null)
-                typetype = ctx.implementedStructure().Mutable() != null ? JTypeType.Mutable : JTypeType.Struct;
+            else if (ctx.compositeStructure() != null)
+                typetype = ctx.compositeStructure().Mutable() != null ? JTypeType.Mutable : JTypeType.Struct;
 
-            IJType tb = new JILTypeBuilder();
+            var tb = frame.Module.DefineType(name);
             tb.Type = typetype;
-            tb.Name = name;
             frame.Type = tb;
             foreach (var item in ctx.structItem()) {
                 if (item.function() != null) {
                     Compile(item.function(), frame);
                 }else {
                     var sctx = item.structField();
-                    CompileField(sctx.blockArg().Identifier(), sctx.blockArg().type(), frame, false, false);
+                    tb.AddField(CompileField(sctx.blockArg().Identifier(), sctx.blockArg().type(), frame, false, false));
                 }
             }
+
+            frame.Expr.Code.InstantiateType(tb);
+            
             frame.Type = null;
         }
+        
         public void Compile(JuliaParser.UsingModuleContext ctx, ExprFrame frame) {
             var ids = ctx.moduleRef().Identifier();
             var str = ctx.moduleRef().GetText().Substring(5);
-            ModuleReference r = new();
-            r.Name = str;
-            ((JILExprBuilder) frame.Expr).AddReference(r);
+            frame.Module.AddName(str, true, false);
         }
         
         public object Compile(JuliaParser.FunctionCallContext ctx, ExprFrame frame) => null;
@@ -126,9 +122,9 @@ namespace runtime.parse
             }
         }
         
-        public JILModuleExpr Compile(JuliaParser.ScriptContext ctx, IJModule evaluationModule) {
-            JILModuleExprBuilder eb = new JILModuleExprBuilder();
-            ExprFrame frame = new(null, evaluationModule, eb);
+        public JRuntimeExpr Compile(JuliaParser.ScriptContext ctx, JRuntimeModule evaluationModule) {
+            JILBuilder eb = new(evaluationModule);
+            ExprFrame frame = new(null, eb, eb);
             
             if (ctx.moduleExpr() != null)
                 Compile(ctx.moduleExpr(), frame);
@@ -136,8 +132,8 @@ namespace runtime.parse
                 foreach(var v in ctx.moduleExprStatement())
                     Compile(v.moduleExpr(), frame);
             }
-            
-            return eb.Create();
+
+            return eb.CreateExpression();
         }
     }
 }

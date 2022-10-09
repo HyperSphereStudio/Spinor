@@ -12,8 +12,8 @@ moduleIdentifier: moduleRef Dot Identifier;
 symbolIdentifier: moduleIdentifier | Identifier;
 
 abstractStructure: AbstractType;
-implementedStructure: Mutable? Struct;
-structure: (abstractStructure | implementedStructure) typeName structItem* endExpr;
+compositeStructure: Mutable? Struct;
+structure: (abstractStructure | compositeStructure) typeName structItem* endExpr;
 structField: Const? blockArg;
 structItem: Termination? (function | structField) Termination;
 
