@@ -18,7 +18,7 @@ Designed to implement julia into .NET. Will translate julia into JIL (Julia Inte
 
   * [Julia++ Intermediate Language (JIL)](runtime/core/JIL "JIL Link"). Stack-based dynamic code form that contains name references rather than static typing. The name references point to a predetermined location that is analogous to a global variable that can be rewritten through the lifespan of the program. JIL cannot be directly executed as it is meant to be read-only and compact.
 
-  * [Julia++ Runtime Model](core/Runtime "JRM Link"). Converts JIL to JRM. The JRM can be directly interpreted using the [JIL Interpreter](runtime/core/JIL/Interpreter.cs "JIL Interpreter Link") or lowered to CIL using the [JIL Compiler](runtime/core/JIL/Compiler.cs "JIL Compiler Link"). 
+  * [Julia++ Runtime Model](runtime/core/Runtime "JRM Link"). Converts JIL to JRM. The JRM can be directly interpreted using the [JIL Interpreter](runtime/core/JIL/Interpreter.cs "JIL Interpreter Link") or lowered to CIL using the [JIL Compiler](runtime/core/JIL/Compiler.cs "JIL Compiler Link"). 
 
   * [ILCompiler](runtime/ILCompiler, "ILCompiler Link"). Used by the JIL Compiler to generate IL code.
 
