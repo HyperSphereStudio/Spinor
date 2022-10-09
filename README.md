@@ -24,7 +24,7 @@ Designed to implement julia into .NET. Will translate julia into JIL (Julia Inte
 
 * [Testing](test "Testing Link"). Where the Julia++ Runtime is tested to make sure it is valid.
 
-* [Julia Standard Library (JSL)](base "JSL Link"). During Runtime Compilation, the JSL will be compiled to JIL and compacted into a jstl.cjpp file that contains the code model of the JSL and precompiles various methods to speed up runtime execution.
+* [Julia Standard Library (JSL)](https://github.com/JuliaLang/julia/tree/master/base "JSL Link"). During Runtime Compilation, the JSL will be compiled to JIL and compacted into a jstl.cjpp file that contains the code model of the JSL and precompiles various methods to speed up runtime execution.
 
 * [Julia++ Standard Library (PSTL)](stlib "PSTL Link"). Extension of the JSL for the Julia++ Language
 
