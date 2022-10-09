@@ -3,8 +3,6 @@
 VERY EXPERIMENTAL, MOSTLY NOT FUNCTIONAL AT THE MOMENT!
 Designed to implement julia into .NET. Will translate julia into JIL (Julia Intermediate) which will then lower to IL or Machine Code on type specialization
 
-I am used to working individually so I am not very familiar with generating documentation for others to read and understand my work. I have tried my best below to describe my project, but it does have many gaps.
-
 Here are some of the resources that my project is composed of:
 Runtime, Code Generation & Execution Platform: .NET 6 (Statically Typed Language)
 Common Intermediate Language (CIL). JRM lowered to CIL on compilation.
