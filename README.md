@@ -4,30 +4,29 @@ VERY EXPERIMENTAL, MOSTLY NOT FUNCTIONAL AT THE MOMENT!
 Designed to implement julia into .NET. Will translate julia into JIL (Julia Intermediate) which will then lower to IL or Machine Code on type specialization
 
 # Resources
-* Runtime, Code Generation & Execution Platform 
-  * .NET 6 (Statically Typed Language)
-* Common Intermediate Language (CIL). JRM lowered to CIL on compilation.
-* Parser, Lexer & AST Walker: ANTLR 
-* Base Language: Julia (Dynamically Typed Language) 
+* [.NET 6](https://dotnet.microsoft.com/en-us/learn/dotnet/what-is-dotnet ".NET6 Documentation Link") (Statically Typed): Runtime, Code Generation & Execution Platform 
+   * [Common Intermediate Language (CIL)](https://en.wikipedia.org/wiki/Common_Intermediate_Language "CIL Documentation Link"): JRM lowered to CIL on compilation.
+* [ANTLR4](http://antlr4/ "Antlr Link"): Parser, Lexer & AST Walker
+* [Julia](https://julialang.org/ "Julia Link"): (Dynamically Typed): Base Language used by Julia++
 
 # Language Project
-* Julia++ Runtime. Required to run Julia++ Code. Contains the parser, JIL compiler and other tools that dynamically link together the program during runtime. 
+* [Julia++ Runtime](https://github.com/HyperSphereStudio/juliapp/tree/master/runtime "Julia++ Runtime Link"): Required to run Julia++ Code. Contains the parser, JIL compiler and other tools that dynamically link together the program during runtime. 
 
-  * Julia++ Grammer. The grammar defines the structure of the language and when compiled to code with ANTLR, will generate a parser, lexer and AST walker that will be used by the Julia++ Static Compiler to Julia Intermediate Language (JIL) I am currently working on making it Julia Compatible before adding my own extensions.
+  * [Julia++ Grammer](https://github.com/HyperSphereStudio/juliapp/blob/master/runtime/parse/generated/Julia.g4 "Julia++ Grammer Link"): The grammar defines the structure of the language and when compiled to code with ANTLR, will generate a parser, lexer and AST walker that will be used by the Julia++ Static Compiler to Julia Intermediate Language (JIL) I am currently working on making it Julia Compatible before adding my own extensions.
 
-  * Code Model. Used to represent the Julia++ in a compact form
+  * Dynamic Code Model. Used to represent the Julia++ in a compact form
 
-  * Julia++ Intermediate Language (JIL). Stack-based dynamic code form that contains name references rather than static typing. The name references point to a predetermined location that is analogous to a global variable that can be rewritten through the lifespan of the program. JIL cannot be directly executed as it is meant to be read-only and compact.
+  * [Julia++ Intermediate Language (JIL)](https://github.com/HyperSphereStudio/juliapp/tree/master/runtime/core/JIL "JIL Link"). Stack-based dynamic code form that contains name references rather than static typing. The name references point to a predetermined location that is analogous to a global variable that can be rewritten through the lifespan of the program. JIL cannot be directly executed as it is meant to be read-only and compact.
 
-  * Julia++ Runtime Model. Converts JIL to JRM. The JRM can be directly interpreted (JIL Interpreter) or lowered to CIL (JIL Compiler). 
+  * [Julia++ Runtime Model](https://github.com/HyperSphereStudio/juliapp/tree/master/runtime/core/Runtime "JRM Link"). Converts JIL to JRM. The JRM can be directly interpreted using the [JIL Interpreter](https://github.com/HyperSphereStudio/juliapp/blob/master/runtime/core/JIL/Interpreter.cs "JIL Interpreter Link") or lowered to CIL using the [JIL Compiler](https://github.com/HyperSphereStudio/juliapp/blob/master/runtime/core/JIL/Compiler.cs "JIL Compiler Link"). 
 
-  * ILCompiler. Used by the JIL Compiler to generate IL code.
+  * [ILCompiler](https://github.com/HyperSphereStudio/juliapp/tree/master/runtime/ILCompiler, "ILCompiler Link"). Used by the JIL Compiler to generate IL code.
 
-* Testing. Where the Julia++ Runtime is tested to make sure it is valid.
+* [Testing](https://github.com/HyperSphereStudio/juliapp/tree/master/test "Testing Link"). Where the Julia++ Runtime is tested to make sure it is valid.
 
-* Julia Standard Library (JSL). During Runtime Compilation, the JSL will be compiled to JIL and compacted into a jstl.cjpp file that contains the code model of the JSL and precompiles various methods to speed up runtime execution.
+* [Julia Standard Library (JSL)](https://github.com/JuliaLang/julia/tree/master/base "JSL Link"). During Runtime Compilation, the JSL will be compiled to JIL and compacted into a jstl.cjpp file that contains the code model of the JSL and precompiles various methods to speed up runtime execution.
 
-* Julia++ Standard Library (PSTL). Extension of the JSL for the Julia++ Language
+* [Julia++ Standard Library (PSTL)](https://github.com/HyperSphereStudio/juliapp/tree/master/stlib "PSTL Link"). Extension of the JSL for the Julia++ Language
 
 # Work Plan
 * JIL, JRM, JIL Interpreter (Currently Working On). Create JRM of basic program(s) that is able to be successfully interpreted
