@@ -1,1 +1,0 @@
-"C:\Program Files\Java\jdk-13.0.2\bin\java.exe" -jar antlr.jar -visitor -package HyperSphere Julia.g4 -Dlanguage=CSharp

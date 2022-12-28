@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sandbox", "sandbox\sandbox.csproj", "{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeGenerator", "RuntimeGenerator\RuntimeGenerator.csproj", "{ADA872B0-4CB0-4219-A67C-B516B544518C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +24,5 @@ Global
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ADA872B0-4CB0-4219-A67C-B516B544518C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ADA872B0-4CB0-4219-A67C-B516B544518C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ADA872B0-4CB0-4219-A67C-B516B544518C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ADA872B0-4CB0-4219-A67C-B516B544518C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

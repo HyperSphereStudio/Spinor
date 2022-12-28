@@ -4,6 +4,7 @@
         <TargetFramework>net5.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>10</LangVersion>
+        <DefineConstants>DEBUG2CONSOLE</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,13 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="core\JIL\generated" />
-      <Folder Include="Utils\generated" />
-      <Folder Include="Utils\generators" />
+      <Folder Include="gen" />
+      <Folder Include="src" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="core\Containers\AbstractInterfaces.cs" />
-    </ItemGroup>
-
 </Project>
