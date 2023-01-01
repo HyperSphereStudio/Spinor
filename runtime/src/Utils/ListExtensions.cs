@@ -23,7 +23,7 @@ public static class ListExtensions
         return true;
     }
     
-    public static TextWriter Print<T>(this IEnumerable<T> l, Func<T, string> toStringMethod = null, TextWriter tw = null, int depth = 3) {
+    public static TextWriter Print<T>(this IEnumerable<T> l, TextWriter tw = null, Func<T, string> toStringMethod = null, int depth = 3) {
         tw ??= Console.Out;
         if (depth-- == 0)
             return tw;
@@ -69,7 +69,7 @@ public static class ListExtensions
         return tw;
     }
 
-    public static TextWriter Print(this IEnumerable l, Func<object, string> toStringMethod = null, TextWriter tw = null, int depth = 3) => Print(l, l.GetType().GetElementType(), toStringMethod, tw, depth);
-    public static void PrintLn<T>(this IEnumerable<T> l, Func<T, string> toStringMethod = null, TextWriter tw = null, int depth = 3) => Print(l, toStringMethod, tw, depth).WriteLine();
-    public static void PrintLn(this IEnumerable l, Func<object, string> toStringMethod = null, TextWriter tw = null, int depth = 3) => Print(l, toStringMethod, tw, depth).WriteLine();
+    public static TextWriter Print(this IEnumerable l, TextWriter tw = null, Func<object, string> toStringMethod = null, int depth = 3) => Print(l, l.GetType().GetElementType(), toStringMethod, tw, depth);
+    public static void PrintLn<T>(this IEnumerable<T> l, TextWriter tw = null, Func<T, string> toStringMethod = null, int depth = 3) => Print(l, tw, toStringMethod, depth).WriteLine();
+    public static void PrintLn(this IEnumerable l, TextWriter tw = null, Func<object, string> toStringMethod = null, int depth = 3) => Print(l, tw, toStringMethod, depth).WriteLine();
 }

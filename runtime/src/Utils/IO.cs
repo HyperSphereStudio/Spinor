@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace runtime.core;
@@ -32,4 +33,12 @@ public static class IO {
 
     public static void PrintLn(this string format, params object[] parameters) =>
         Console.Out.WriteLine(format, parameters);
+
+    private static void Repeat(TextWriter tw, string s, int n) {
+        for(int i = 0; i < n; i++)
+            tw.Write(s);
+    }
+   
+    
+    
 }

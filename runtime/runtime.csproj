@@ -14,6 +14,7 @@
 
     <ItemGroup>
       <Folder Include="gen" />
+      <Folder Include="gen\core\parse" />
       <Folder Include="src" />
     </ItemGroup>
 </Project>

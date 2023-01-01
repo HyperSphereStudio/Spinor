@@ -152,13 +152,13 @@ namespace runtime.ILCompiler
                         FromPointerFloat32();
                     else if (t == typeof(double))
                         FromPointerFloat64();
-                    else throw new JuliaException("Unable to Determine Pointer Type T");
+                    else throw new SpinorException("Unable to Determine Pointer Type T");
                 }
                 else if (t.IsByRef)
                 {
                     FromPointerRef();
                 }
-                else throw new JuliaException("Unable to Determine Pointer Type T");
+                else throw new SpinorException("Unable to Determine Pointer Type T");
             }
         }
 
@@ -196,13 +196,13 @@ namespace runtime.ILCompiler
                         ToPointerFloat32();
                     else if (t == typeof(double))
                         ToPointerFloat64();
-                    else throw new JuliaException("Unable to Determine Pointer Type T");
+                    else throw new SpinorException("Unable to Determine Pointer Type T");
                 }
                 else if (t.IsByRef)
                 {
                     ToPointerRef();
                 }
-                else throw new JuliaException("Unable to Determine Pointer Type T");
+                else throw new SpinorException("Unable to Determine Pointer Type T");
             }
         }
 

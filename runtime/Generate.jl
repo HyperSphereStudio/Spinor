@@ -17,8 +17,7 @@ function generate(path, name)
     println("Finished Generating $path")
 end
 
-clean_generated() = rm(GenRootDir, recursively=true)
+clean_generated() = rm(GenRootDir, recursive=true)
 
-clean_generated()
 generate("", "core")
 

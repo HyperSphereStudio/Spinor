@@ -104,10 +104,11 @@ public class Binding
     }
 }
 
-public class Module : Any
-{
-    public readonly Symbol Name;
+public class Module : SystemAny {
+    public Symbol Name { get; }
     public Module Parent { get; internal set; }
+    public override Type Type => Types.Module;
+    
     public Dictionary<Symbol, Binding> Bindings = new();
     public readonly List<Module> Usings = new();
     public readonly UUID BuildID, UUID;
@@ -121,11 +122,8 @@ public class Module : Any
     public sbyte MaxMethods;
     public readonly object Lock = new();
     public readonly int Hash;
-    public Type Type => Types.Module;
 
-
-    public Module(Symbol name, Module parent, bool defaultNames = true)
-    {
+    public Module(Symbol name, Module parent, bool defaultNames = true) {
         Name = name;
         Parent = parent;
         UUID = new();
@@ -138,9 +136,9 @@ public class Module : Any
         Infer = -1;
         MaxMethods = -1;
         IsTopMod = false;
-
+        
         Hash = parent == null
-            ? HashCode.Combine(Name.Hash, Types.Module.Hash)
+            ? HashCode.Combine(Name.Hash, Types.Module == null ? 0x12345678 : Types.Module.GetHashCode())
             : HashCode.Combine(Name.Hash, parent.Hash);
         
         if (Modules.Core != null && defaultNames)
@@ -159,7 +157,7 @@ public class Module : Any
         asName ??= m.Name;
         if (GetBindingResolved(asName, out var b)) {
             if (!b.Const && b.Owner != m)
-                throw new JuliaException("importing {0} into {1} conflicts with an existing global", asName, m.Name);
+                throw new SpinorException("importing {0} into {1} conflicts with an existing global", asName, m.Name);
         } else {
             b = m.GetBindingWR(asName, true);
             b.Imported = true;
@@ -167,7 +165,6 @@ public class Module : Any
         if (!b.Const)
             b.Const = true;
     }
-
     public void Using(Module from)
     {
         if (this == from)
@@ -175,7 +172,6 @@ public class Module : Any
         lock (Lock)
             Usings.Add(from);
     }
-
     public void Export(Symbol s)
     {
         lock (Lock)
@@ -185,7 +181,6 @@ public class Module : Any
             b.Exported = true;
         }
     }
-
     public GlobalRef GlobalRef(Symbol var) {
         lock (Lock) {
             if (!GetBinding(var, out var b))
@@ -201,14 +196,13 @@ public class Module : Any
     }
 
     #endregion
-
     #region Globals
 
     public void SetConst(Symbol name, Any value)
     {
         var b = GetBindingWR(name, true);
         if (b.Value != null)
-            throw new JuliaException("Invalid Redefinition of Constant {0}", b);
+            throw new SpinorException("Invalid Redefinition of Constant {0}", b);
         b.Value = value;
         b.Const = true;
         b.BindingType = value.Type;
@@ -232,7 +226,6 @@ public class Module : Any
     }
 
     #endregion
-
     #region Bindings
 
     public bool GetBinding(Symbol var, out Binding v)
@@ -263,7 +256,7 @@ public class Module : Any
             if (b.Owner == null)
                 b.Owner = this;
             else if (alloc)
-                throw new JuliaException("Cannot Assign a value to imported variable {0}.{1} from module {2}",
+                throw new SpinorException("Cannot Assign a value to imported variable {0}.{1} from module {2}",
                     b.Owner, var, this);
         }else if (alloc) {
             b = new Binding(var) { Owner = this };
@@ -278,7 +271,7 @@ public class Module : Any
         // Only print a warning for deprecated == 1 (renamed).
         // For deprecated == 2 (moved to a package) the binding is to a function
         // that throws an error, so we don't want to print a warning too.
-        if (b.Deprecation != Deprecation.Renamed || !JuliaOptions.DependencyWarn)
+        if (b.Deprecation != Deprecation.Renamed || !SpinorOptions.DependencyWarn)
             return;
         "WARNING: ".Err();
         if (b.Owner != null)

@@ -1,6 +1,6 @@
 namespace runtime.core;
 
-public static class JuliaOptions {
+public static class SpinorOptions {
     public static bool DependencyWarn = true;
     
     
