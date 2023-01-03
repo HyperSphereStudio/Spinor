@@ -1,6 +1,13 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 using System;
 using System.Collections.Generic;
 using runtime.core;
+using runtime.core.Compilation;
 using runtime.Utils;
 
 namespace Core;
@@ -18,24 +25,18 @@ public struct UUID
 }
 
 [Flags]
-public enum BindingFlag : byte
-{
+public enum BindingFlag : byte {
     Const = 1 << 0,
     Exported = 1 << 1,
-    Imported = 1 << 2
-}
-
-public enum Deprecation : byte
-{
-    NotDeprecated = 0,
-    Renamed = 1,
-    Moved = 2
+    Imported = 1 << 2,
+    Renamed = 1 << 3,
+    Moved = 1 << 4
 }
 
 public class GlobalRef{
-    Module Module;
-    Symbol Name;
-    Binding BindCache; // Not serialized. Caches the value of jl_get_binding(mod, name).
+    public Module Module;
+    public readonly Symbol Name;
+    public Binding BindCache; // Not serialized. Caches the value of jl_get_binding(mod, name).
 
     public GlobalRef(Module module, Symbol name, Binding bindCache) {
         Module = module;
@@ -44,46 +45,42 @@ public class GlobalRef{
     }
 }
 
-public class Binding
-{
-    public Symbol Name;
+public class Binding {
+    public readonly Symbol Name;
     public Any Value;
     public GlobalRef GlobalRef; // cached GlobalRef for this binding
     public Module Owner; // for individual imported bindings
     public Type BindingType;
     public BindingFlag Flags;
 
-    public bool Const
-    {
+    public bool Const {
         get => Flags.HasFlag(BindingFlag.Const);
         set => Flags = Flags.Set(BindingFlag.Const, value);
     }
 
-    public bool Exported
-    {
+    public bool Exported {
         get => Flags.HasFlag(BindingFlag.Exported);
         set => Flags = Flags.Set(BindingFlag.Exported, value);
     }
 
-    public bool Imported
-    {
+    public bool Imported {
         get => Flags.HasFlag(BindingFlag.Imported);
         set => Flags = Flags.Set(BindingFlag.Imported, value);
     }
-
-    public Deprecation Deprecation
-    {
-        get => (Flags.ConvertTo<BindingFlag, byte>() >> 3).ConvertFrom<Deprecation, int>();
-        //Clear Deprecation
-        set => Flags = (Flags.ConvertTo<BindingFlag, byte>() & (1 + 2 + 4)
-                        //Add New Deprecation
-                        | value.ConvertTo<Deprecation, byte>()).ConvertFrom<BindingFlag, int>();
+    
+    public bool Renamed {
+        get => Flags.HasFlag(BindingFlag.Renamed);
+        set => Flags = Flags.Set(BindingFlag.Renamed, value);
     }
+    
+    public bool Moved {
+        get => Flags.HasFlag(BindingFlag.Moved);
+        set => Flags = Flags.Set(BindingFlag.Moved, value);
+    }
+    
+    public bool Deprecated => Renamed || Moved;
 
-    public bool Deprecated => (Flags.ConvertTo<BindingFlag, byte>() >> 3) > 0;
-
-    public Binding(Symbol name)
-    {
+    public Binding(Symbol name) {
         Name = name;
         Flags = 0;
     }
@@ -102,44 +99,42 @@ public class Binding
             return this == b;
         return false;
     }
+
+    public void DeprecationWarning() {
+        // Only print a warning for deprecated == 1 (renamed).
+        // For deprecated == 2 (moved to a package) the binding is to a function
+        // that throws an error, so we don't want to print a warning too.
+        if (!Renamed || !SpinorOptions.DependencyWarn)
+            return;
+        
+        "WARNING: ".Err();
+        if (Owner != null)
+            "{0}.{1} is deprecated".ErrLn(Owner.Name, Name);
+        else
+            "{0} is deprecated".ErrLn(Name);
+    }
 }
 
 public class Module : SystemAny {
     public Symbol Name { get; }
     public Module Parent { get; internal set; }
     public override Type Type => Types.Module;
-    
-    public Dictionary<Symbol, Binding> Bindings = new();
+    public readonly Dictionary<Symbol, Binding> Bindings = new();
     public readonly List<Module> Usings = new();
     public readonly UUID BuildID, UUID;
-    public readonly uint PrimaryWorld;
-    public int Counter;
-    public bool NoSpecialize;
-    public bool IsTopMod { get; private set; }
-    public sbyte OptLevel;
-    public sbyte Compile;
-    public sbyte Infer;
-    public sbyte MaxMethods;
+    public virtual bool IsTopMod => false;
     public readonly object Lock = new();
-    public readonly int Hash;
+    private readonly int _hash;
 
     public Module(Symbol name, Module parent, bool defaultNames = true) {
         Name = name;
         Parent = parent;
         UUID = new();
         BuildID = new UUID { Lo = (ulong)DateTime.Now.Ticks, Hi = ~ (ulong)0 };
-        PrimaryWorld = 0;
-        Counter = 1;
-        NoSpecialize = false;
-        OptLevel = -1;
-        Compile = -1;
-        Infer = -1;
-        MaxMethods = -1;
-        IsTopMod = false;
-        
-        Hash = parent == null
+
+        _hash = parent == null
             ? HashCode.Combine(Name.Hash, Types.Module == null ? 0x12345678 : Types.Module.GetHashCode())
-            : HashCode.Combine(Name.Hash, parent.Hash);
+            : HashCode.Combine(Name.Hash, parent._hash);
         
         if (Modules.Core != null && defaultNames)
             Using(Modules.Core);
@@ -159,7 +154,7 @@ public class Module : SystemAny {
             if (!b.Const && b.Owner != m)
                 throw new SpinorException("importing {0} into {1} conflicts with an existing global", asName, m.Name);
         } else {
-            b = m.GetBindingWR(asName, true);
+            b = m.GetBindingWrapper(asName, true);
             b.Imported = true;
         }
         if (!b.Const)
@@ -200,7 +195,7 @@ public class Module : SystemAny {
 
     public void SetConst(Symbol name, Any value)
     {
-        var b = GetBindingWR(name, true);
+        var b = GetBindingWrapper(name, true);
         if (b.Value != null)
             throw new SpinorException("Invalid Redefinition of Constant {0}", b);
         b.Value = value;
@@ -210,7 +205,7 @@ public class Module : SystemAny {
 
     public void SetGlobal(Symbol var, Any val)
     {
-        var b = GetBindingWR(var, true);
+        var b = GetBindingWrapper(var, true);
         var bt = b.BindingType;
         if (bt == Types.Any || val.Type == bt) return;
         if (!val.Isa(bt))
@@ -221,35 +216,24 @@ public class Module : SystemAny {
         if (!GetBinding(var, out var v))
             return null;
         if (v.Deprecated)
-            jl_binding_deprecation_warning(v);
+            v.DeprecationWarning();
         return v.Value;
     }
 
     #endregion
     #region Bindings
 
-    public bool GetBinding(Symbol var, out Binding v)
-    {
+    public bool GetBinding(Symbol var, out Binding v) {
         lock (Lock)
             return Bindings.TryGetValue(var, out v);
     }
-
-    public Binding GetBinding(Symbol var)
-    {
-        if (GetBinding(var, out var v))
-            return v;
-        return null;
-    }
-
-    public bool GetBindingResolved(Symbol var, out Binding v)
-    {
+    public Binding GetBinding(Symbol var) => GetBinding(var, out var v) ? v : null;
+    public bool GetBindingResolved(Symbol var, out Binding v) {
         if (GetBinding(var, out v))
             return v.Owner != null;
         return false;
     }
-
-    public Binding GetBindingWR(Symbol var, bool alloc)
-    {
+    public Binding GetBindingWrapper(Symbol var, bool alloc) {
         if (GetBinding(var, out var b)) {
             if (b.Owner == this)
                 return b;
@@ -265,31 +249,23 @@ public class Module : SystemAny {
         }
         return b;
     }
-
-    private void jl_binding_deprecation_warning(Binding b)
-    {
-        // Only print a warning for deprecated == 1 (renamed).
-        // For deprecated == 2 (moved to a package) the binding is to a function
-        // that throws an error, so we don't want to print a warning too.
-        if (b.Deprecation != Deprecation.Renamed || !SpinorOptions.DependencyWarn)
-            return;
-        "WARNING: ".Err();
-        if (b.Owner != null)
-        {
-            "{0}.{1} is deprecated".ErrLn(b.Owner.Name, b.Name);
-        }
-        else
-        {
-            "{0} is deprecated".ErrLn(b.Name);
-        }
-    }
-
     #endregion
 
-    public Module BaseRelativeTo(Module m)
-    {
-        for (;;)
-        {
+    public TopModule TopModule {
+        get {
+            var m = this;
+            for (;;) {
+                if (m.IsTopMod)
+                    return (TopModule) m;
+                if (m == m.Parent)
+                    break;
+                m = m.Parent;
+            }
+            return null;
+        }
+    }
+    public Module BaseRelativeTo(Module m) {
+        for (;;) {
             if (m.IsTopMod)
                 return m;
             if (m == m.Parent)
@@ -299,16 +275,22 @@ public class Module : SystemAny {
 
         return Modules.TopModule;
     }
-
-    void SetTopMod(bool isPrimary)
-    {
-        IsTopMod = true;
-        if (isPrimary)
-            Modules.TopModule = this;
-    }
 }
 
-public static class Modules
-{
-    public static Module Main, Core, Base, TopModule;
+public class TopModule : Module, IExprLargeConstantPool {
+    
+    public readonly InternContainer<string> StringPool = new();
+    public readonly InternContainer<Symbol> SymbolPool = new();
+    public override bool IsTopMod => true;
+    
+    public TopModule(Symbol name, Module parent, bool defaultNames = true) : base(name, parent, defaultNames) {}
+    
+    public int InternString(string s) => StringPool.Load(s);
+    public int InternSymbol(Symbol s) => SymbolPool.Load(s);
+    public string LoadString(int i) => StringPool.Get(i);
+    public Symbol LoadSymbol(int i) => SymbolPool.Get(i);
+}
+
+public static class Modules {
+    public static TopModule Main, Core, Base, TopModule;
 }

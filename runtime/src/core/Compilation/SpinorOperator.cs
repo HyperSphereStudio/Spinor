@@ -1,12 +1,11 @@
+global using SpinorTokenType = System.UInt16;
+
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
 using Core;
-using Microsoft.VisualBasic;
-using runtime.parse;
 
-namespace runtime.core.expr;
+namespace runtime.core.Compilation;
 
 [Flags]
 public enum OperatorType : ushort {
@@ -32,10 +31,10 @@ public class SpinorOperator {
     public readonly Symbol Symbol;
     public readonly byte Precedence;
     public readonly OperatorType Type;
-    private readonly ushort _tokenType;
-    public ushort TokenType => _tokenType;
+    private readonly SpinorTokenType _tokenType;
+    public SpinorTokenType TokenType => _tokenType;
 
-    public SpinorOperator(Symbol symbol, byte precedence, OperatorType type, ushort tokenType) {
+    public SpinorOperator(Symbol symbol, byte precedence, OperatorType type, SpinorTokenType tokenType) {
         Symbol = symbol;
         Precedence = precedence;
         Type = type;
@@ -114,7 +113,7 @@ public class SpinorOperator {
             AddOperator(new((Symbol) op, precedence, type, 0));
     }
     public static void AddOperator(SpinorOperator op) {
-        SpinorOperator o = new(op.Symbol, op.Precedence, op.Type, (ushort) _token2Operators.Count);
+        SpinorOperator o = new(op.Symbol, op.Precedence, op.Type, (SpinorTokenType) _token2Operators.Count);
         _token2Operators.Add(o);
         _symbols2Operators.Add(o.Symbol, o);
         GetBucket(o.Symbol.String[0]).Add(o);

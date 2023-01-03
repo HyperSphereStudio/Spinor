@@ -1,9 +1,16 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 using System.IO;
 using runtime.core;
+using runtime.core.Utils;
 
 namespace Core;
 
-public interface Any {
+public interface Any{
     public Type Type { get; }
     public bool Isa(Type t) => t.Isa(this);
     public bool EqualTo(object o);

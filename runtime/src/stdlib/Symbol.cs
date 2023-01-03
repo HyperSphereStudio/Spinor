@@ -1,8 +1,14 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 using System.Collections.Generic;
 
 namespace Core;
 
-public class Symbol : SystemAny {
+public class Symbol : SystemAny{
     private static readonly Dictionary<string, Symbol> intern_strings = new();
     public new readonly string String;
     public new readonly int Hash;

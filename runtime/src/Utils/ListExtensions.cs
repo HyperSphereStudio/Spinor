@@ -1,3 +1,9 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,9 +36,8 @@ public static class ListExtensions
         bool isFirst = true;
         toStringMethod ??= x => x.ToString();
         
-        tw.Write("{");
         tw.Write(typeof(T).Name);
-        tw.Write("}[");
+        tw.Write("[");
         
         foreach (var x in l)
         {
@@ -54,9 +59,8 @@ public static class ListExtensions
         bool isFirst = true;
         toStringMethod ??= x => x.ToString();
         
-        tw.Write("{");
         tw.Write(elType.Name);
-        tw.Write("}[");
+        tw.Write("[");
         foreach (var x in l) {
             if (isFirst)
                 isFirst = false;

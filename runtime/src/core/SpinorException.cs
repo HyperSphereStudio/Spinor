@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
+using System;
 using System.IO;
 using System.Text;
 

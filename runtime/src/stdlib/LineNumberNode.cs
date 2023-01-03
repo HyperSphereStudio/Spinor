@@ -1,8 +1,19 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 namespace Core;
 
-public class LineNumberNode : SystemAny {
-    public int Line;
-    public string File;
+public interface ILineNumberNode {
+    public int Line { get; }
+    public string File { get; }
+}
+
+public class LineNumberNode : SystemAny, ILineNumberNode{
+    public int Line { get; }
+    public string File { get; }
 
     public LineNumberNode(int line, string file) {
         Line = line;

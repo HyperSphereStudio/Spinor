@@ -46,19 +46,12 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitExprBlock([NotNull] SpinorParser.ExprBlockContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>tuple</c>
+	/// Visit a parse tree produced by the <c>functionCall</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitTuple([NotNull] SpinorParser.TupleContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>parenthetical</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitParenthetical([NotNull] SpinorParser.ParentheticalContext context);
+	Result VisitFunctionCall([NotNull] SpinorParser.FunctionCallContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>struct</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
@@ -81,6 +74,13 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitBlock([NotNull] SpinorParser.BlockContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>tupleExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>name</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// </summary>
@@ -100,6 +100,12 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitExpr([NotNull] SpinorParser.ExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.tuple"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitTuple([NotNull] SpinorParser.TupleContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>float</c>
 	/// labeled alternative in <see cref="SpinorParser.literal"/>.

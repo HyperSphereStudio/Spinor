@@ -1,3 +1,9 @@
+/*
+   * Author : Johnathan Bizzano
+   * Created : Monday, January 2, 2023
+   * Last Modified : Monday, January 2, 2023
+*/
+
 lexer grammar SpinorLexer;
 
 options { language=CSharp; superClass=SuperSpinorLexer; }
