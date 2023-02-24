@@ -5,41 +5,31 @@
 */
 
 using System;
+using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
 using Core;
 using runtime.core;
 using runtime.core.Compilation;
-using runtime.core.Compilation.compiler;
 
-namespace sandbox
-{
-    public static class Program {
+namespace sandbox;
 
-        static void Main(string[] args) {
-            Spinor.Init();
-            try
-            {
-                var p = new ExprParser();
-                var k = new ExprSerializer();
-                var e = (Expr) p.Parse(@"
-                            module MyModule
-                                x = 5
-                                x *= 2
-                                x = (x + 2) * (x - 2) * (x ^ 2) ∈ w
-                                println((2, 3, x))
+public interface ITest3 {}
+public interface ITest2<T> : ITest3{}
+public interface ITest<T> : ITest2<T> where T:ITest3{}
 
-                                struct MyStruct 
-                                       field1
-                                end
-                            end");
-               e.WriteCode(Console.Out);
-               var comp = new CLRCompiler();
-               comp.Compile(e, Modules.Core);
-            }
-            catch (SpinorException e) {
-                e.Print();
-            }
-            Spinor.Exit();
+public static class Program {
+    static void Main(string[] args) {
+        Spinor.Init();
+        try {
+            var p = new ExprParser();
+            var e = (Expr) p.Parse(new FileInfo("runtime/Core/Boot.jl"));
+            e.WriteCode(Console.Out);
         }
-        
+        catch (SpinorException e) {
+            e.Print();
+        }
+        Spinor.Exit();
     }
+        
 }

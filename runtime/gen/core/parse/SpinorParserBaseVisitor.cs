@@ -20,7 +20,7 @@
 #pragma warning disable 419
 
 namespace HyperSphere {
-using runtime.parse;
+using runtime.core.parse;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using IToken = Antlr4.Runtime.IToken;
@@ -90,6 +90,28 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// <return>The visitor result.</return>
 	public virtual Result VisitModule([NotNull] SpinorParser.ModuleContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by the <c>primitive</c>
+	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitPrimitive([NotNull] SpinorParser.PrimitiveContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>abstractOrBuiltin</c>
+	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>block</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// <para>
@@ -112,7 +134,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// <return>The visitor result.</return>
 	public virtual Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>name</c>
+	/// Visit a parse tree produced by the <c>nameExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
@@ -121,7 +143,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitName([NotNull] SpinorParser.NameContext context) { return VisitChildren(context); }
+	public virtual Result VisitNameExpr([NotNull] SpinorParser.NameExprContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>literalExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
@@ -154,8 +176,17 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// <return>The visitor result.</return>
 	public virtual Result VisitTuple([NotNull] SpinorParser.TupleContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>float</c>
-	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// Visit a parse tree produced by <see cref="SpinorParser.integer"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitInteger([NotNull] SpinorParser.IntegerContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.float"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -165,8 +196,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// <return>The visitor result.</return>
 	public virtual Result VisitFloat([NotNull] SpinorParser.FloatContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>integer</c>
-	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// Visit a parse tree produced by <see cref="SpinorParser.literal"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -174,6 +204,6 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitInteger([NotNull] SpinorParser.IntegerContext context) { return VisitChildren(context); }
+	public virtual Result VisitLiteral([NotNull] SpinorParser.LiteralContext context) { return VisitChildren(context); }
 }
 } // namespace HyperSphere

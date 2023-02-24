@@ -4,22 +4,22 @@
    * Last Modified : Monday, January 2, 2023
 */
 
+using System.IO;
+
 namespace Core;
 
-public interface ILineNumberNode {
-    public int Line { get; }
-    public string File { get; }
-}
+public sealed record LineNumberNode(int Line, string File) : IAny<LineNumberNode> {
+   public static SType RuntimeType { get; set; }
+   public LineNumberNode This => this;
+   
+   public override string ToString() => "#= " + File + ":" + Line + " =#";
+   public void Print(TextWriter tw) {
+      tw.Write("#= ");
+      tw.Write(File);
+      tw.Write(":");
+      tw.Write(Line);
+      tw.Write(" =#");
+   }
 
-public class LineNumberNode : SystemAny, ILineNumberNode{
-    public int Line { get; }
-    public string File { get; }
-
-    public LineNumberNode(int line, string file) {
-        Line = line;
-        File = file;
-    }
-
-    public override string ToString() => "#= " + File + ":" + Line + " =#";
-    public override Type Type => Types.LineNumberNode;
+   
 }

@@ -6,151 +6,143 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using runtime.core;
+using runtime.core.type;
+using runtime.ILCompiler;
+using runtime.Utils;
 
 namespace Core;
 
-[Flags]
-public enum FieldProperties : byte {
-    Const,
-    Atomic,
-    Normal
-}
-
-public struct Field {
-    public Symbol Name;
-    public Type Type;
-    public FieldProperties Properties;
-
-    public Field(Symbol name, Type type, FieldProperties properties) {
-        Name = name;
-        Type = type;
-        Properties = properties;
-    }
+public abstract class SType : IAny<SType> {
+    private static readonly Dictionary<Type, SType> CachedSystem2SpinorTypes = new();
+    private static readonly Dictionary<SType, Type> CachedSpinor2SystemTypes = new();
     
-    public Field(string name, Type type, FieldProperties properties) {
-        Name = (Symbol) name;
-        Type = type;
-        Properties = properties;
-    }
-}
-
-
-[Flags]
-public enum TypeProperties : byte{
-    Abstract = 1,
-    Mutable = 2,
-    MayInlineAlloc = 4,
-    Primitive = 5,
-}
-
-public interface Type : Any {
+    public static SType NothingType { get; internal set; }
+    public static SType RuntimeType { get; set; }
     public Symbol Name { get; }
+    public AbstractType Super { get; internal set; }
     public Module Module { get; }
-    public Type Super { get; }
-    public IList<Field> Fields { get; }
-    public TypeProperties Properties { get; }
+    public Type UnderlyingType { get; private set; }
+    public SType This => this;
+    public void Print(TextWriter tw) => tw.Write(Name.String);
+    
+    public virtual bool IsMutable => true;
+    public virtual bool IsReference => true;
+    public virtual bool IsSystemWrapper => false;
+    public virtual bool IsUnmanagedType => false;
+    public virtual int StackLength => 8;
+    public virtual int HeapLength => 0;
 
-    public bool Isa(Type t);
-    public bool Isa(Any v) => Isa(v.Type);
-    public bool IsAbstract => Properties.HasFlag(TypeProperties.Abstract);
-    public bool IsMutable => Properties.HasFlag(TypeProperties.Mutable);
-    public bool MayInlineAlloc => Properties.HasFlag(TypeProperties.MayInlineAlloc);
-    public bool IsConcreteType { get; }
+
+    protected SType(Symbol name, AbstractType super, Module module, Type underlyingType) {
+        Name = name;
+        Super = super;
+        UnderlyingType = underlyingType;
+        Module = module;
+
+        //Build Basic Type Object
+        if (underlyingType is not TypeBuilder tb) 
+            return;
+        
+        ((RuntimeModule) module).SetConst(name, this);
+    }
+
+    public static SType GetType(Type ty, RuntimeModule rm = null) => CachedSystem2SpinorTypes.TryGetValue(ty, out var v) ? v : RegisterSystemType(ty, CreateTypeFromSystem(ty, rm));
+
+    private static SType RegisterSystemType(Type sty, SType st) {
+        CachedSpinor2SystemTypes.Add(st, sty);
+        CachedSystem2SpinorTypes.Add(sty, st);
+        return st;
+    }
+
+    private static AbstractType CreateSuperType(Type t, Type super, RuntimeModule rm) => super == null ? Any.RuntimeType : (AbstractType) GetType(t.BaseType, rm);
+
+    public static SType CreateTypeFromSystem(Type t, RuntimeModule rm = null) {
+        if (CachedSystem2SpinorTypes.TryGetValue(t, out var v))
+            return v;
+        
+        rm ??= Spinor.Root;
+        SType ty;
+        AbstractType super;
+        Symbol name;
+        PropertyInfo pi = null;
+
+        if (t.IsAssignableTo(typeof(IAny))) { 
+            pi = t.GetProperty("RuntimeType", BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+            ty = (SType) pi.GetValue(null);
+          
+            if (ty != null) //Already Instantiated Runtime Type
+                return ty;
+            
+            name = (Symbol) t.Name;
+            super = CreateSuperType(t, null, rm);
+        }else {
+            name = (Symbol) t.Name;
+            super = CreateSuperType(t, null, rm);
+        }
+
+        if (t.IsPrimitive) {
+            ty = new PrimitiveType(name, super, rm, t, Marshal.SizeOf(t));
+        }else if (t.IsClass) {
+            ty = new MutableStructType(name, super, rm, t);
+        }else if (t.IsInterface) {
+            ty = new AbstractType(name, super, rm, t, BuiltinType.None);
+        }
+        else throw new NotImplementedException();
+        
+        rm.SetConst(name, ty);
+        pi?.SetValue(null, ty);
+        return ty;
+    }
+
+    protected static void ImplementIAnyInterface(TypeBuilder ty, Type ianyT) {
+        ty.AddInterfaceImplementation(ianyT);
+        ty.CreateBackingGetSetProperty("RuntimeType", typeof(SType), Attributes.Static | Attributes.Public);
+
+        var mb = new IlExprBuilder(ty.CreateMethod("get_This", ty, IlExprBuilder.InterfaceAttributes | MethodAttributes.Public));
+        mb.Load.This();
+        mb.Return();
+    }
+
+    public virtual Type Initialize() {
+        try {
+            if (UnderlyingType is TypeBuilder tb)
+                UnderlyingType = tb.CreateType();
+            return UnderlyingType;
+        }
+        catch (Exception e) {
+            "Error while Creating Type {0}".PrintLn(Name);
+            throw e;
+        }
+    }
+    
+    public static bool IsUnmanaged(Type type) {
+        if (type.IsPrimitive || type.IsPointer || type.IsEnum)
+            return true;
+        
+        if (!type.IsValueType)
+            return false;
+        
+        return type
+            .GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .All(f => IsUnmanaged(f.FieldType));
+    }
 }
 
-public class DataType : SystemAny, Type {
-    public static readonly DataType[] EmptyTypes = new DataType[0];
-    public static readonly Field[] EmptyFields = new Field[0];
+public sealed class MutableStructType : SType {
+    public const TypeAttributes MutableStructAttributes = TypeAttributes.Interface | TypeAttributes.Public | TypeAttributes.Abstract;
     
-    public Symbol Name { get; init; }
-    public Module Module { get; init; }
-    public IList<Field> Fields { get; init; }
-    public TypeProperties Properties { get; init; }
-    public override Type Type => Types.DataType;
-    public Type Super { get; internal set; }
-    public DataType[] Parameters { get; init; }
-    public bool IsConcreteType => Parameters.Length == 0;
-    public object Instance { get; internal set; }
-    public int Hash { get; init; }
-
-    public static DataType NewDataType(Symbol name, Module m, DataType super, DataType[] parameters, Field[] fields, TypeProperties properties) {
-        var t = new DataType {
-            Name = name,
-            Module = m,
-            Fields = fields,
-            Super = super,
-            Parameters = parameters,
-            Properties = properties,
-            Hash = HashCode.Combine(HashCode.Combine(m != null ? m.BuildID.Lo : 0, name.Hash), 0xa1ada1da)
-        };
-        return t;
-    }
-
-    public static DataType NewAbstractType(Symbol name, Module m, DataType super, DataType[] parameters) => NewDataType(name, m, super, parameters, Array.Empty<Field>(), TypeProperties.Abstract);
-
-    public override int GetHashCode() => Hash;
-    internal static DataType NewUninitializedDataType() => new();
+    internal MutableStructType(Symbol name, AbstractType super, Module module, Type underlyingType) : 
+        base(name, super, module, underlyingType) {}
     
-    public bool Isa(Type t) {
-        if (t == this || this == Core.Types.Any)
-            return true;
-        if (t == Core.Types.Type)
-            return true;
-        return false;
-    }
-}
+    internal static MutableStructType Create(Symbol name, AbstractType super, RuntimeModule module) => 
+        Create(name, super, (super ?? Any.RuntimeType).UnderlyingType, module);
 
-public static class Types
-{
-    public static DataType
-        Any, Type, DataType, Nothing, 
-        AbstractString, Function, Builtin;
-        
-    //Primitive Types
-    public static Type 
-        Int32, UInt32, 
-        Int64, UInt64,
-        Int16, UInt16,
-        Int8, UInt8,
-        Bool, String,
-        
-        Expr, LineNumberNode, SystemType, Symbol, Module;
-
-    private static Type CreateTypeFromSystem(System.Type t, Symbol name = null, Module m = null) => runtime.core.SystemType.GetOrCreateSystemType(t, name, m);
-
-    internal static void Init() {
-        Any = DataType.NewAbstractType(CommonSymbols.Any, Modules.Core, null, DataType.EmptyTypes);
-        Any.Super = Any;
-
-        Symbol = CreateTypeFromSystem(typeof(Symbol), null, Modules.Core);
-        Type = DataType.NewAbstractType(CommonSymbols.Type, Modules.Core, Any, DataType.EmptyTypes);
-
-        // NOTE: types are not actually mutable, but we want to ensure they are heap-allocated with stable addresses
-        DataType = DataType.NewDataType((Symbol) "DataType", Modules.Core, Type, 
-            DataType.EmptyTypes, new Field[] {}, TypeProperties.Mutable);
-     
-        Nothing = DataType.NewDataType((Symbol) "Nothing", Modules.Core, Any, DataType.EmptyTypes, DataType.EmptyFields, 0);
-        Nothing.Instance = Nothing;
-
-        UInt8 = CreateTypeFromSystem(typeof(byte), (Symbol) "UInt8", Modules.Core);
-        Int8 = CreateTypeFromSystem(typeof(sbyte), (Symbol) "Int8", Modules.Core);
-        UInt16 = CreateTypeFromSystem(typeof(ushort), (Symbol) "UInt16", Modules.Core);
-        Int16 = CreateTypeFromSystem(typeof(short), (Symbol) "Int16", Modules.Core);
-        UInt32 = CreateTypeFromSystem(typeof(uint), (Symbol) "UInt32", Modules.Core);
-        Int32 = CreateTypeFromSystem(typeof(int), (Symbol) "Int32", Modules.Core);
-        UInt64 = CreateTypeFromSystem(typeof(ulong), (Symbol) "UInt64", Modules.Core);
-        Int64 = CreateTypeFromSystem(typeof(long), (Symbol) "Int64", Modules.Core);
-        Bool = CreateTypeFromSystem(typeof(bool), (Symbol) "Bool", Modules.Core);
-        Module = CreateTypeFromSystem(typeof(Module), null, Modules.Core);
-        SystemType = CreateTypeFromSystem(typeof(SystemType), null, Modules.Core);
-        Expr = CreateTypeFromSystem(typeof(Expr), null, Modules.Core);
-        LineNumberNode = CreateTypeFromSystem(typeof(LineNumberNode), null, Modules.Core);
-
-        AbstractString =  DataType.NewAbstractType((Symbol) "AbstractString", Modules.Core, Any, DataType.EmptyTypes);
-        String = DataType.NewDataType((Symbol) "String", Modules.Core, AbstractString, DataType.EmptyTypes, DataType.EmptyFields, TypeProperties.Mutable);
-        
-        Function = DataType.NewAbstractType((Symbol) "Function", Modules.Core, Any, DataType.EmptyTypes);
-        Builtin  = DataType.NewAbstractType((Symbol) "Builtin", Modules.Core, Function, DataType.EmptyTypes);
-    }
+    internal static MutableStructType Create(Symbol name, AbstractType ssuper, Type super, RuntimeModule module) => 
+        new(name, ssuper, module, module.ModuleBuilder.DefineType(name.String, MutableStructAttributes, null, new[]{super}));
 }

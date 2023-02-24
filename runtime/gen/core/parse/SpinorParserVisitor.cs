@@ -20,7 +20,7 @@
 #pragma warning disable 419
 
 namespace HyperSphere {
-using runtime.parse;
+using runtime.core.parse;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using IToken = Antlr4.Runtime.IToken;
@@ -67,6 +67,20 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitModule([NotNull] SpinorParser.ModuleContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>primitive</c>
+	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPrimitive([NotNull] SpinorParser.PrimitiveContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>abstractOrBuiltin</c>
+	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>block</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// </summary>
@@ -81,12 +95,12 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>name</c>
+	/// Visit a parse tree produced by the <c>nameExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitName([NotNull] SpinorParser.NameContext context);
+	Result VisitNameExpr([NotNull] SpinorParser.NameExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>literalExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
@@ -107,18 +121,22 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTuple([NotNull] SpinorParser.TupleContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>float</c>
-	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// Visit a parse tree produced by <see cref="SpinorParser.integer"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInteger([NotNull] SpinorParser.IntegerContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.float"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitFloat([NotNull] SpinorParser.FloatContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>integer</c>
-	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// Visit a parse tree produced by <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitInteger([NotNull] SpinorParser.IntegerContext context);
+	Result VisitLiteral([NotNull] SpinorParser.LiteralContext context);
 }
 } // namespace HyperSphere

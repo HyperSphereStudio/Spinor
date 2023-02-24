@@ -6,291 +6,167 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using runtime.core;
-using runtime.core.Compilation;
-using runtime.Utils;
+using runtime.core.type;
+using runtime.ILCompiler;
 
 namespace Core;
 
-public struct UUID
-{
-    public ulong Hi;
-    public ulong Lo;
-
-    public UUID()
-    {
-        Hi = 0;
-        Lo = 0;
+//Field used for internal building
+public record struct Binding(FieldInfo Field, Module Module, bool Initialized, Any InternalValue = null) {
+    //Runtime Value
+    private Any InternalValue { get; set; } = InternalValue;
+    
+    public bool Initialized { get; internal set; } = Initialized;
+    
+    public Any Value {
+        get => InternalValue;
+        set {
+            if (Field.IsInitOnly)
+                throw new SpinorException("Cannot Set Value of Constant!");
+            InternalValue = value;
+        }
     }
 }
 
-[Flags]
-public enum BindingFlag : byte {
-    Const = 1 << 0,
-    Exported = 1 << 1,
-    Imported = 1 << 2,
-    Renamed = 1 << 3,
-    Moved = 1 << 4
+public interface ITopModule {
+    public SpinorContext Context { get; }
 }
 
-public class GlobalRef{
-    public Module Module;
+public abstract class Module : IAny<Module> {
     public readonly Symbol Name;
-    public Binding BindCache; // Not serialized. Caches the value of jl_get_binding(mod, name).
+    public Module This => this;
+    public Module Parent { get; protected init; }
+    public abstract Type UnderlyingType { get; }
+    public void Print(TextWriter tw) => tw.Write(Name);
+    public object Lock => this;
+    public virtual SpinorContext Context => Parent.Context;
+    public static SType RuntimeType { get; set; }
+    public abstract bool IsUsing(Module m);
+    public abstract Any this[Symbol name] { get; set; }
 
-    public GlobalRef(Module module, Symbol name, Binding bindCache) {
-        Module = module;
+    protected Module(Symbol name, Module parent) {
+        if (parent != null) {
+            Parent = parent;
+        }else if (this is ITopModule) {
+            Parent = this;
+        }
+        else throw new SpinorException("Cannot Initialize Module with No Parent!");
         Name = name;
-        BindCache = bindCache;
     }
 }
 
-public class Binding {
-    public readonly Symbol Name;
-    public Any Value;
-    public GlobalRef GlobalRef; // cached GlobalRef for this binding
-    public Module Owner; // for individual imported bindings
-    public Type BindingType;
-    public BindingFlag Flags;
+public class RuntimeModule : Module {
+    public const TypeAttributes RuntimeModuleAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed;
 
-    public bool Const {
-        get => Flags.HasFlag(BindingFlag.Const);
-        set => Flags = Flags.Set(BindingFlag.Const, value);
+    public readonly Dictionary<Symbol, Binding> Names = new();
+    public readonly HashSet<Module> Usings = new();
+    public ILTypeBuilder ModuleTypeBuilder { get; private set; }
+    private Type _underlyingType;
+    public override Type UnderlyingType => _underlyingType;
+    public ModuleBuilder ModuleBuilder => ((SpinorRuntimeContext) Parent.Context).ModuleBuilder;
+    public readonly string LongName;
+
+    protected RuntimeModule(Symbol name, RuntimeModule parent, SpinorRuntimeContext ctx) : base(name, parent) {
+        LongName = parent == null ? "Root." + name.String : parent.GetFullName(name);
+        var tb = ctx.ModuleBuilder.DefineType(LongName, RuntimeModuleAttributes);
+        ModuleTypeBuilder = new(tb);
+        _underlyingType = tb;
     }
 
-    public bool Exported {
-        get => Flags.HasFlag(BindingFlag.Exported);
-        set => Flags = Flags.Set(BindingFlag.Exported, value);
-    }
-
-    public bool Imported {
-        get => Flags.HasFlag(BindingFlag.Imported);
-        set => Flags = Flags.Set(BindingFlag.Imported, value);
+    public override Any this[Symbol name] {
+        get => Names[name].Value;
+        set {
+            if (Names.TryGetValue(name, out var v))
+                v.Value = value;
+            else 
+                SetGlobal(name, value);
+        }
     }
     
-    public bool Renamed {
-        get => Flags.HasFlag(BindingFlag.Renamed);
-        set => Flags = Flags.Set(BindingFlag.Renamed, value);
-    }
-    
-    public bool Moved {
-        get => Flags.HasFlag(BindingFlag.Moved);
-        set => Flags = Flags.Set(BindingFlag.Moved, value);
-    }
-    
-    public bool Deprecated => Renamed || Moved;
+    public override bool IsUsing(Module m) => Usings.Contains(m);
 
-    public Binding(Symbol name) {
-        Name = name;
-        Flags = 0;
-    }
-    
-    public static bool operator==(Binding a, Binding b) {
-        if (ReferenceEquals(a, b))
-            return true;
-        if (a.Name == b.Name && a.Owner == b.Owner)
-            return true;
-        return a.Const && b.Const && a.Value != null && b.Value == a.Value;
-    }
-    public static bool operator!=(Binding a, Binding b) => !(a == b);
-
-    public override bool Equals(object o) {
-        if (o is Binding b)
-            return this == b;
-        return false;
-    }
-
-    public void DeprecationWarning() {
-        // Only print a warning for deprecated == 1 (renamed).
-        // For deprecated == 2 (moved to a package) the binding is to a function
-        // that throws an error, so we don't want to print a warning too.
-        if (!Renamed || !SpinorOptions.DependencyWarn)
-            return;
+    public void SetConst<T>(Symbol name, T a) where T: Any {
+        if (Names.ContainsKey(name))
+            throw new SpinorException("Cannot rewrite constant {0}", name);
         
-        "WARNING: ".Err();
-        if (Owner != null)
-            "{0}.{1} is deprecated".ErrLn(Owner.Name, Name);
-        else
-            "{0} is deprecated".ErrLn(Name);
-    }
-}
-
-public class Module : SystemAny {
-    public Symbol Name { get; }
-    public Module Parent { get; internal set; }
-    public override Type Type => Types.Module;
-    public readonly Dictionary<Symbol, Binding> Bindings = new();
-    public readonly List<Module> Usings = new();
-    public readonly UUID BuildID, UUID;
-    public virtual bool IsTopMod => false;
-    public readonly object Lock = new();
-    private readonly int _hash;
-
-    public Module(Symbol name, Module parent, bool defaultNames = true) {
-        Name = name;
-        Parent = parent;
-        UUID = new();
-        BuildID = new UUID { Lo = (ulong)DateTime.Now.Ticks, Hi = ~ (ulong)0 };
-
-        _hash = parent == null
-            ? HashCode.Combine(Name.Hash, Types.Module == null ? 0x12345678 : Types.Module.GetHashCode())
-            : HashCode.Combine(Name.Hash, parent._hash);
+        var b = CreateBinding(name, typeof(T), true, a);
         
-        if (Modules.Core != null && defaultNames)
-            Using(Modules.Core);
-
-        // export own name, so "using Foo" makes "Foo" itself visible
-        if (defaultNames)
-            SetConst(name, this);
-
-        Export(name);
+        ModuleTypeBuilder.TypeInitializer.Store.Field(b.Field);
     }
 
-    #region ModuleManipulation
+    public void SetGlobal(Symbol name, Any v) {
+        var b = CreateBinding(name, typeof(Any), false);
+        b.Value = v;
+    }
+    
+    public Binding CreateBinding(Symbol name, SType t, bool isConst) => CreateBinding(name, t.UnderlyingType, isConst);
 
-    public void Import(Module m, Symbol asName) {
-        asName ??= m.Name;
-        if (GetBindingResolved(asName, out var b)) {
-            if (!b.Const && b.Owner != m)
-                throw new SpinorException("importing {0} into {1} conflicts with an existing global", asName, m.Name);
-        } else {
-            b = m.GetBindingWrapper(asName, true);
-            b.Imported = true;
-        }
-        if (!b.Const)
-            b.Const = true;
-    }
-    public void Using(Module from)
-    {
-        if (this == from)
-            return;
-        lock (Lock)
-            Usings.Add(from);
-    }
-    public void Export(Symbol s)
-    {
-        lock (Lock)
-        {
-            if (!Bindings.TryGetValue(s, out var b))
-                b = new Binding(s);
-            b.Exported = true;
-        }
-    }
-    public GlobalRef GlobalRef(Symbol var) {
-        lock (Lock) {
-            if (!GetBinding(var, out var b))
-                return new GlobalRef(this, var, null);
-            var gr = b.GlobalRef;
-            if (gr != null) 
-                return gr;
-            gr = new GlobalRef(this, var,
-                b.Owner == null ? null : b.Owner == this ? b : b.Owner.GetBinding(b.Name));
-            b.GlobalRef = gr;
-            return gr;
-        }
-    }
-
-    #endregion
-    #region Globals
-
-    public void SetConst(Symbol name, Any value)
-    {
-        var b = GetBindingWrapper(name, true);
-        if (b.Value != null)
-            throw new SpinorException("Invalid Redefinition of Constant {0}", b);
-        b.Value = value;
-        b.Const = true;
-        b.BindingType = value.Type;
-    }
-
-    public void SetGlobal(Symbol var, Any val)
-    {
-        var b = GetBindingWrapper(var, true);
-        var bt = b.BindingType;
-        if (bt == Types.Any || val.Type == bt) return;
-        if (!val.Isa(bt))
-            "Cannot Assign an incompatible value to the Global {0}.".ErrLn(b.Name);
-    }
-
-    public Any GetGlobal(Symbol var) {
-        if (!GetBinding(var, out var v))
-            return null;
-        if (v.Deprecated)
-            v.DeprecationWarning();
-        return v.Value;
-    }
-
-    #endregion
-    #region Bindings
-
-    public bool GetBinding(Symbol var, out Binding v) {
-        lock (Lock)
-            return Bindings.TryGetValue(var, out v);
-    }
-    public Binding GetBinding(Symbol var) => GetBinding(var, out var v) ? v : null;
-    public bool GetBindingResolved(Symbol var, out Binding v) {
-        if (GetBinding(var, out v))
-            return v.Owner != null;
-        return false;
-    }
-    public Binding GetBindingWrapper(Symbol var, bool alloc) {
-        if (GetBinding(var, out var b)) {
-            if (b.Owner == this)
-                return b;
-            if (b.Owner == null)
-                b.Owner = this;
-            else if (alloc)
-                throw new SpinorException("Cannot Assign a value to imported variable {0}.{1} from module {2}",
-                    b.Owner, var, this);
-        }else if (alloc) {
-            b = new Binding(var) { Owner = this };
-            lock (Lock)
-                Bindings.Add(var, b);
-        }
+    public Binding CreateBinding(Symbol name, Type t, bool isConst, Any constValue = null) {
+        Attributes a = Attributes.Public | Attributes.Static;
+        if (isConst)
+            a |= Attributes.Constant;
+        
+        Binding b = new(ModuleTypeBuilder.CreateField(name.String, t, a), this, false, constValue);
+        Names.Add(name, b);
         return b;
     }
-    #endregion
 
-    public TopModule TopModule {
-        get {
-            var m = this;
-            for (;;) {
-                if (m.IsTopMod)
-                    return (TopModule) m;
-                if (m == m.Parent)
-                    break;
-                m = m.Parent;
-            }
-            return null;
-        }
+    public AbstractType NewAbstractType(Symbol name, AbstractType super, BuiltinType builtinType = BuiltinType.None) => AbstractType.Create(name, super, this, builtinType);
+    public PrimitiveType NewPrimitiveType(Symbol name, AbstractType super, int bytelength) => PrimitiveType.Create(name, super, this, bytelength);
+
+    public void Initialize() {
+        if (_underlyingType is TypeBuilder)
+           _underlyingType = ModuleTypeBuilder.Create();
+        ModuleTypeBuilder = default;
     }
-    public Module BaseRelativeTo(Module m) {
-        for (;;) {
-            if (m.IsTopMod)
-                return m;
-            if (m == m.Parent)
-                break;
-            m = m.Parent;
-        }
 
-        return Modules.TopModule;
+    public string GetFullName(Symbol name) => LongName + "." + name.String;
+}
+
+public sealed class RuntimeTopModule : RuntimeModule, ITopModule{
+    public override SpinorRuntimeContext Context { get; }
+
+    public RuntimeTopModule(Symbol name, SpinorRuntimeContext runtimeContext) : base(name, null, runtimeContext) {
+        Context = runtimeContext;
     }
 }
 
-public class TopModule : Module, IExprLargeConstantPool {
+public class CompiledModule : Module {
+    public override Type UnderlyingType { get; }
+    public readonly ImmutableDictionary<Symbol, Binding> Names;
+    public readonly ImmutableHashSet<Module> Usings;
+
+    public CompiledModule(Symbol name, Module parent, Type underlyingType) : base(name, parent){
+        Names = SpinorOptions.ReflectionEnabled ? 
+                ImmutableDictionary.CreateRange(underlyingType.GetFields().
+                        Select(x => new KeyValuePair<Symbol, Binding>((Symbol) x.Name, new(x, this, true)))) 
+            : null;
+        
+        UnderlyingType = underlyingType;
+        Usings = ImmutableHashSet<Module>.Empty;
+    }
     
-    public readonly InternContainer<string> StringPool = new();
-    public readonly InternContainer<Symbol> SymbolPool = new();
-    public override bool IsTopMod => true;
-    
-    public TopModule(Symbol name, Module parent, bool defaultNames = true) : base(name, parent, defaultNames) {}
-    
-    public int InternString(string s) => StringPool.Load(s);
-    public int InternSymbol(Symbol s) => SymbolPool.Load(s);
-    public string LoadString(int i) => StringPool.Get(i);
-    public Symbol LoadSymbol(int i) => SymbolPool.Get(i);
+    public override bool IsUsing(Module m) => Usings.Contains(m);
+
+    public override Any this[Symbol name] {
+        get => Names[name].Value;
+        set {
+            var n = Names[name];
+            n.Value = value;
+        }
+    }
 }
 
-public static class Modules {
-    public static TopModule Main, Core, Base, TopModule;
+public class CompiledTopModule : CompiledModule, ITopModule {
+    public override SpinorCompiledContext Context { get; }
+
+    public CompiledTopModule(Symbol name, SpinorCompiledContext context, Type underlyingType) : base(name, null, underlyingType) {
+        Context = context;
+    }
 }

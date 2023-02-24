@@ -4,7 +4,6 @@
    * Last Modified : Monday, January 2, 2023
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace runtime.Utils;
@@ -14,16 +13,23 @@ internal struct InternElement {
     internal int Idx;
 }
 
-internal class InternElementEquality<T> : IEqualityComparer<InternElement> where T: class{
+internal class InternElementEquality<T> : IEqualityComparer<InternElement>{
     private readonly InternContainer<T> _c;
     internal InternElementEquality(InternContainer<T> c) => _c = c;
     public bool Equals(InternElement x, InternElement y) => 
-        x.Hash == y.Hash && (x.Idx == -1 ? Equals(_c.CheckItem, _c.Data[y.Idx]) : y.Idx == -1 && Equals(_c.CheckItem, _c.Data[x.Idx]));
+        x.Hash == y.Hash && (x.Idx == -1 ? CEquals(_c.CheckItem, _c.Data[y.Idx]) : y.Idx == -1 && CEquals(_c.CheckItem, _c.Data[x.Idx]));
 
     public int GetHashCode(InternElement obj) => obj.Hash;
+
+    private static bool CEquals(T a, T b) {
+        if (a is null)
+            return b is null;
+
+        return a.Equals(b);
+    }
 }
 
-public class InternContainer<T> where T: class{
+public class InternContainer<T>{
     private readonly HashSet<InternElement> _s;
     internal readonly List<T> Data = new();
     internal T CheckItem;
@@ -63,5 +69,11 @@ public class InternContainer<T> where T: class{
         if (_s.TryGetValue(e, out var rE))
             return rE.Idx;
         return -1;
+    }
+
+    public void Clear() {
+        _s.Clear();
+        Data.Clear();
+        CheckItem = default;
     }
 }

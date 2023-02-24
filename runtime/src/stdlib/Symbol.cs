@@ -5,32 +5,36 @@
 */
 
 using System.Collections.Generic;
+using System.IO;
 
 namespace Core;
 
-public class Symbol : SystemAny{
-    private static readonly Dictionary<string, Symbol> intern_strings = new();
-    public new readonly string String;
-    public new readonly int Hash;
+public sealed class Symbol : IAny<Symbol>{
+    private static readonly Dictionary<string, Symbol> InternStrings = new();
     
-    public override Type Type => Types.Module;
+    public readonly string String;
+    private readonly int _hash;
+    public static SType RuntimeType { get; set; }
+    public Symbol This => this;
 
     private Symbol(string s) {
         String = s;
-        Hash = s.GetHashCode();
+        _hash = s.GetHashCode();
     }
     
     public static Symbol Create(string str) {
-        if (intern_strings.TryGetValue(str, out var v))
+        if (InternStrings.TryGetValue(str, out var v))
             return v;
         var jsym = new Symbol(string.Intern(str));
-        intern_strings.Add(jsym.String, jsym);
+        InternStrings.Add(jsym.String, jsym);
         return jsym;
     }
 
     public static explicit operator Symbol(string s) => Create(s);
-    public override int GetHashCode() => Hash;
+    public override int GetHashCode() => _hash;
     public override string ToString() => String;
+    public void Print(TextWriter tw) => tw.Write(String);
+
 }
 
 public static class ASTSymbols
@@ -44,15 +48,25 @@ public static class ASTSymbols
         Struct = (Symbol) "struct",
         Module = (Symbol) "module",
         Tuple = (Symbol) "tuple",
-        Assign = (Symbol) "=";
+        Assign = (Symbol) "=",
+        Primitive = (Symbol) "primitive",
+        Abstract = (Symbol) "abstract",
+        Extends = (Symbol) "<:",
+        Builtin = (Symbol) "builtin";
 }
 
 public static class CommonSymbols
 {
-    public static Symbol
-        Base = (Symbol)"Base",
-        Core = (Symbol)"Core",
-        Main = (Symbol)"Main",
-        Any = (Symbol)"Any",
-        Type = (Symbol)"Type";
+    public static readonly Symbol
+        Base = (Symbol) "Base",
+        Core = (Symbol) "Core",
+        Main = (Symbol) "Main",
+        Any = (Symbol) "Any",
+        Type = (Symbol) "Type",
+        Union = (Symbol) "Union",
+        TypeVar = (Symbol) "TypeVar",
+        Integer = (Symbol) "Integer",
+        AbstractFloat = (Symbol) "AbstractFloat",
+        Signed = (Symbol) "Signed",
+        Unsigned = (Symbol) "Unsigned";
 }
