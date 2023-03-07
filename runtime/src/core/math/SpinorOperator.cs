@@ -63,7 +63,7 @@ public class SpinorOperator {
         AddOperations(OperatorType.Binary | OperatorType.Infix | OperatorType.Assignable | OperatorType.RightAssociative, 0, "=");
      
         AddOperations(OperatorType.Binary | OperatorType.Infix | OperatorType.Comparison, 1,
-            new[]{">", "<", ">=", "≥", "<=", "≤", "==", "===", "≡", "!=", "≠", "!==", "≢", "∈", "∉", 
+            new[]{"::", ">", "<", ">=", "≥", "<=", "≤", "==", "===", "≡", "!=", "≠", "!==", "≢", "∈", "∉", 
                 "∋", "∌", "⊆", "⊈", "⊂", "⊄", "⊊", "∝", "∊", "∍", "∥", "∦", "∷", "∺", "∻", "∽", "∾", "≁", "≃", 
                 "≂", "≄", "≅", "≆", "≇", "≈", "≉", "≊", "≋", "≌", "≍", "≎", "≐", "≑", "≒", "≓", "≖", "≗", "≘", 
                 "≙", "≚", "≛", "≜", "≝", "≞", "≟", "≣", "≦", "≧", "≨", "≩", "≪", "≫", "≬", "≭", "≮", "≯", "≰", "≱", 

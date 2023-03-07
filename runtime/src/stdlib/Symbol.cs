@@ -9,13 +9,13 @@ using System.IO;
 
 namespace Core;
 
-public sealed class Symbol : IAny<Symbol>{
+public sealed class Symbol : IAny{
     private static readonly Dictionary<string, Symbol> InternStrings = new();
     
     public readonly string String;
     private readonly int _hash;
     public static SType RuntimeType { get; set; }
-    public Symbol This => this;
+    public SType Type => RuntimeType;
 
     private Symbol(string s) {
         String = s;
@@ -52,7 +52,8 @@ public static class ASTSymbols
         Primitive = (Symbol) "primitive",
         Abstract = (Symbol) "abstract",
         Extends = (Symbol) "<:",
-        Builtin = (Symbol) "builtin";
+        Builtin = (Symbol) "builtin",
+        Colon = (Symbol) "::";
 }
 
 public static class CommonSymbols
@@ -68,5 +69,6 @@ public static class CommonSymbols
         Integer = (Symbol) "Integer",
         AbstractFloat = (Symbol) "AbstractFloat",
         Signed = (Symbol) "Signed",
-        Unsigned = (Symbol) "Unsigned";
+        Unsigned = (Symbol) "Unsigned",
+        Exception = (Symbol) "Exception";
 }

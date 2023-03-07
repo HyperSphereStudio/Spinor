@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "runtime", "runtime\runtime.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sandbox", "sandbox\sandbox.csproj", "{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lokad.ILPack", "ILPacker\Lokad.ILPack.csproj", "{2E8B0ED5-D51E-4F7A-AC27-80C7E385A86E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD76A34F-BB7D-4A05-A09A-77A4816CFD4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E8B0ED5-D51E-4F7A-AC27-80C7E385A86E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E8B0ED5-D51E-4F7A-AC27-80C7E385A86E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E8B0ED5-D51E-4F7A-AC27-80C7E385A86E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E8B0ED5-D51E-4F7A-AC27-80C7E385A86E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

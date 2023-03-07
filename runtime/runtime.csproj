@@ -9,11 +9,15 @@
 
     <ItemGroup>
       <PackageReference Include="Antlr4.Runtime.Standard" Version="4.10.1" />
-      <PackageReference Include="Lokad.ILPack" Version="0.2.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="gen" />
       <Folder Include="gen\core\parse" />
+      <Folder Include="src\libs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ILPacker\Lokad.ILPack.csproj" />
     </ItemGroup>
 </Project>

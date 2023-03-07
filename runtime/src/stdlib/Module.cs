@@ -12,10 +12,12 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using runtime.core;
+using runtime.core.compilation.Expr;
 using runtime.core.type;
 using runtime.ILCompiler;
 
 namespace Core;
+using static FieldAttributes;
 
 //Field used for internal building
 public record struct Binding(FieldInfo Field, Module Module, bool Initialized, Any InternalValue = null) {
@@ -38,17 +40,18 @@ public interface ITopModule {
     public SpinorContext Context { get; }
 }
 
-public abstract class Module : IAny<Module> {
+public abstract class Module : IAny {
     public readonly Symbol Name;
-    public Module This => this;
     public Module Parent { get; protected init; }
     public abstract Type UnderlyingType { get; }
     public void Print(TextWriter tw) => tw.Write(Name);
     public object Lock => this;
     public virtual SpinorContext Context => Parent.Context;
     public static SType RuntimeType { get; set; }
+    public SType Type => RuntimeType;
     public abstract bool IsUsing(Module m);
     public abstract Any this[Symbol name] { get; set; }
+    public override string ToString() => Name.String;
 
     protected Module(Symbol name, Module parent) {
         if (parent != null) {
@@ -68,7 +71,7 @@ public class RuntimeModule : Module {
     public readonly HashSet<Module> Usings = new();
     public ILTypeBuilder ModuleTypeBuilder { get; private set; }
     private Type _underlyingType;
-    public override Type UnderlyingType => _underlyingType;
+    public override Type UnderlyingType { get; }
     public ModuleBuilder ModuleBuilder => ((SpinorRuntimeContext) Parent.Context).ModuleBuilder;
     public readonly string LongName;
 
@@ -78,6 +81,8 @@ public class RuntimeModule : Module {
         ModuleTypeBuilder = new(tb);
         _underlyingType = tb;
     }
+
+    public bool HasName(Symbol name) => Names.ContainsKey(name);
 
     public override Any this[Symbol name] {
         get => Names[name].Value;
@@ -91,10 +96,9 @@ public class RuntimeModule : Module {
     
     public override bool IsUsing(Module m) => Usings.Contains(m);
 
-    public void SetConst<T>(Symbol name, T a) where T: Any {
+    public void SetConst<T>(Symbol name, T a) where T: IAny {
         if (Names.ContainsKey(name))
             throw new SpinorException("Cannot rewrite constant {0}", name);
-        
         var b = CreateBinding(name, typeof(T), true, a);
         
         ModuleTypeBuilder.TypeInitializer.Store.Field(b.Field);
@@ -108,9 +112,9 @@ public class RuntimeModule : Module {
     public Binding CreateBinding(Symbol name, SType t, bool isConst) => CreateBinding(name, t.UnderlyingType, isConst);
 
     public Binding CreateBinding(Symbol name, Type t, bool isConst, Any constValue = null) {
-        Attributes a = Attributes.Public | Attributes.Static;
+        var a = Public | Static;
         if (isConst)
-            a |= Attributes.Constant;
+            a |= InitOnly;
         
         Binding b = new(ModuleTypeBuilder.CreateField(name.String, t, a), this, false, constValue);
         Names.Add(name, b);
@@ -119,7 +123,9 @@ public class RuntimeModule : Module {
 
     public AbstractType NewAbstractType(Symbol name, AbstractType super, BuiltinType builtinType = BuiltinType.None) => AbstractType.Create(name, super, this, builtinType);
     public PrimitiveType NewPrimitiveType(Symbol name, AbstractType super, int bytelength) => PrimitiveType.Create(name, super, this, bytelength);
-
+    public RuntimeModule NewModule(Symbol name, bool isBare) => new(name, this, (SpinorRuntimeContext) Context);
+    public StructType NewStructType(StructKind kind, Symbol name, AbstractType super, params Field[] fields) => StructType.Create(kind, name, super, this, fields);
+    
     public void Initialize() {
         if (_underlyingType is TypeBuilder)
            _underlyingType = ModuleTypeBuilder.Create();
@@ -127,6 +133,7 @@ public class RuntimeModule : Module {
     }
 
     public string GetFullName(Symbol name) => LongName + "." + name.String;
+    public Any Evaluate(Any a) => new GlobalExprInterpreter(this).Evaluate(a);
 }
 
 public sealed class RuntimeTopModule : RuntimeModule, ITopModule{

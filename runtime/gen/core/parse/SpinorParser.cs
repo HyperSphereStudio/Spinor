@@ -503,7 +503,7 @@ public partial class SpinorParser : SuperSpinorParser {
 		EnterRule(_localctx, 4, RULE_primaryExpr);
 		int _la;
 		try {
-			State = 83;
+			State = 84;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,8,Context) ) {
 			case 1:
@@ -534,9 +534,10 @@ public partial class SpinorParser : SuperSpinorParser {
 				Match(STRUCT);
 				State = 46;
 				Match(Name);
-				State = 47;
-				exprBlock();
+				SpinorState = SpinorState.Expression;
 				State = 48;
+				exprBlock();
+				State = 49;
 				Match(END);
 				}
 				break;
@@ -544,29 +545,29 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new ModuleContext(_localctx);
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 52;
+				State = 53;
 				ErrorHandler.Sync(this);
 				switch (TokenStream.LA(1)) {
 				case MODULE:
 					{
-					State = 50;
+					State = 51;
 					Match(MODULE);
 					}
 					break;
 				case BAREMODULE:
 					{
-					State = 51;
+					State = 52;
 					((ModuleContext)_localctx).bare = Match(BAREMODULE);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				State = 54;
-				Match(Name);
 				State = 55;
-				exprBlock();
+				Match(Name);
 				State = 56;
+				exprBlock();
+				State = 57;
 				Match(END);
 				}
 				break;
@@ -574,27 +575,27 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new PrimitiveContext(_localctx);
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 58;
-				Match(PRIMITIVE);
 				State = 59;
-				Match(TYPE);
+				Match(PRIMITIVE);
 				State = 60;
+				Match(TYPE);
+				State = 61;
 				((PrimitiveContext)_localctx).name = Match(Name);
-				State = 63;
+				State = 64;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==EXTEND) {
 					{
-					State = 61;
-					Match(EXTEND);
 					State = 62;
+					Match(EXTEND);
+					State = 63;
 					((PrimitiveContext)_localctx).extends = Match(Name);
 					}
 				}
 
-				State = 65;
-				integer();
 				State = 66;
+				integer();
+				State = 67;
 				Match(END);
 				}
 				break;
@@ -602,7 +603,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new AbstractOrBuiltinContext(_localctx);
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 68;
+				State = 69;
 				_la = TokenStream.LA(1);
 				if ( !(_la==ABSTRACT || _la==BUILTIN) ) {
 				ErrorHandler.RecoverInline(this);
@@ -611,23 +612,23 @@ public partial class SpinorParser : SuperSpinorParser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 69;
-				Match(TYPE);
 				State = 70;
+				Match(TYPE);
+				State = 71;
 				((AbstractOrBuiltinContext)_localctx).name = Match(Name);
-				State = 73;
+				State = 74;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==EXTEND) {
 					{
-					State = 71;
-					Match(EXTEND);
 					State = 72;
+					Match(EXTEND);
+					State = 73;
 					((AbstractOrBuiltinContext)_localctx).extends = Match(Name);
 					}
 				}
 
-				State = 75;
+				State = 76;
 				Match(END);
 				}
 				break;
@@ -635,7 +636,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new BlockContext(_localctx);
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 76;
+				State = 77;
 				((BlockContext)_localctx).head = TokenStream.LT(1);
 				_la = TokenStream.LA(1);
 				if ( !(_la==QUOTE || _la==BEGIN) ) {
@@ -645,9 +646,9 @@ public partial class SpinorParser : SuperSpinorParser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 77;
-				exprBlock();
 				State = 78;
+				exprBlock();
+				State = 79;
 				Match(END);
 				}
 				break;
@@ -655,7 +656,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new TupleExprContext(_localctx);
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 80;
+				State = 81;
 				tuple();
 				}
 				break;
@@ -663,7 +664,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new NameExprContext(_localctx);
 				EnterOuterAlt(_localctx, 8);
 				{
-				State = 81;
+				State = 82;
 				Match(Name);
 				}
 				break;
@@ -671,7 +672,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				_localctx = new LiteralExprContext(_localctx);
 				EnterOuterAlt(_localctx, 9);
 				{
-				State = 82;
+				State = 83;
 				literal();
 				}
 				break;
@@ -736,25 +737,25 @@ public partial class SpinorParser : SuperSpinorParser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 85;
+			State = 86;
 			primaryExpr();
-			State = 91;
+			State = 92;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,9,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 86;
-					if (!(OperatorPrecedence >= _localctx.p)) throw new FailedPredicateException(this, "OperatorPrecedence >= $p");
 					State = 87;
-					Match(BinaryOrAssignableOp);
+					if (!(OperatorPrecedence >= _localctx.p)) throw new FailedPredicateException(this, "OperatorPrecedence >= $p");
 					State = 88;
+					Match(BinaryOrAssignableOp);
+					State = 89;
 					expr(NextOperatorPrecedence);
 					}
 					} 
 				}
-				State = 93;
+				State = 94;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,9,Context);
 			}
@@ -815,29 +816,29 @@ public partial class SpinorParser : SuperSpinorParser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 94;
+			State = 95;
 			Match(RPAR);
-			State = 100;
+			State = 101;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,10,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 95;
-					expr(0);
 					State = 96;
+					expr(0);
+					State = 97;
 					Match(COMMA);
 					}
 					} 
 				}
-				State = 102;
+				State = 103;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,10,Context);
 			}
-			State = 103;
-			expr(0);
 			State = 104;
+			expr(0);
+			State = 105;
 			Match(LPAR);
 			}
 		}
@@ -888,7 +889,7 @@ public partial class SpinorParser : SuperSpinorParser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 107;
+			State = 108;
 			ErrorHandler.Sync(this);
 			_alt = 1;
 			do {
@@ -896,7 +897,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				case 1:
 					{
 					{
-					State = 106;
+					State = 107;
 					Match(DIGIT);
 					}
 					}
@@ -904,7 +905,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				State = 109;
+				State = 110;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,11,Context);
 			} while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER );
@@ -959,23 +960,23 @@ public partial class SpinorParser : SuperSpinorParser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 112;
+			State = 113;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			do {
 				{
 				{
-				State = 111;
+				State = 112;
 				Match(DIGIT);
 				}
 				}
-				State = 114;
+				State = 115;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			} while ( _la==DIGIT );
-			State = 116;
+			State = 117;
 			Match(DOT);
-			State = 118;
+			State = 119;
 			ErrorHandler.Sync(this);
 			_alt = 1;
 			do {
@@ -983,7 +984,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				case 1:
 					{
 					{
-					State = 117;
+					State = 118;
 					Match(DIGIT);
 					}
 					}
@@ -991,7 +992,7 @@ public partial class SpinorParser : SuperSpinorParser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				State = 120;
+				State = 121;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,13,Context);
 			} while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER );
@@ -1043,20 +1044,20 @@ public partial class SpinorParser : SuperSpinorParser {
 		LiteralContext _localctx = new LiteralContext(Context, State);
 		EnterRule(_localctx, 14, RULE_literal);
 		try {
-			State = 124;
+			State = 125;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,14,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 122;
+				State = 123;
 				@float();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 123;
+				State = 124;
 				integer();
 				}
 				break;
@@ -1087,45 +1088,46 @@ public partial class SpinorParser : SuperSpinorParser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,25,127,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,25,128,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,1,0,1,0,1,0,1,1,5,1,21,8,1,10,1,12,1,24,9,1,1,1,1,1,5,1,28,8,1,10,
 		1,12,1,31,9,1,5,1,33,8,1,10,1,12,1,36,9,1,1,1,3,1,39,8,1,1,2,1,2,1,2,3,
-		2,44,8,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,53,8,2,1,2,1,2,1,2,1,2,1,2,1,
-		2,1,2,1,2,1,2,3,2,64,8,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,74,8,2,1,
-		2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,84,8,2,1,3,1,3,1,3,1,3,5,3,90,8,3,10,
-		3,12,3,93,9,3,1,4,1,4,1,4,1,4,5,4,99,8,4,10,4,12,4,102,9,4,1,4,1,4,1,4,
-		1,5,4,5,108,8,5,11,5,12,5,109,1,6,4,6,113,8,6,11,6,12,6,114,1,6,1,6,4,
-		6,119,8,6,11,6,12,6,120,1,7,1,7,3,7,125,8,7,1,7,0,0,8,0,2,4,6,8,10,12,
-		14,0,2,2,0,15,15,17,17,1,0,1,2,140,0,16,1,0,0,0,2,22,1,0,0,0,4,83,1,0,
-		0,0,6,85,1,0,0,0,8,94,1,0,0,0,10,107,1,0,0,0,12,112,1,0,0,0,14,124,1,0,
-		0,0,16,17,3,2,1,0,17,18,5,0,0,1,18,1,1,0,0,0,19,21,5,21,0,0,20,19,1,0,
-		0,0,21,24,1,0,0,0,22,20,1,0,0,0,22,23,1,0,0,0,23,34,1,0,0,0,24,22,1,0,
-		0,0,25,29,3,6,3,0,26,28,5,21,0,0,27,26,1,0,0,0,28,31,1,0,0,0,29,27,1,0,
-		0,0,29,30,1,0,0,0,30,33,1,0,0,0,31,29,1,0,0,0,32,25,1,0,0,0,33,36,1,0,
-		0,0,34,32,1,0,0,0,34,35,1,0,0,0,35,38,1,0,0,0,36,34,1,0,0,0,37,39,3,6,
-		3,0,38,37,1,0,0,0,38,39,1,0,0,0,39,3,1,0,0,0,40,41,5,20,0,0,41,84,3,8,
-		4,0,42,44,5,9,0,0,43,42,1,0,0,0,43,44,1,0,0,0,44,45,1,0,0,0,45,46,5,10,
-		0,0,46,47,5,20,0,0,47,48,3,2,1,0,48,49,5,6,0,0,49,84,1,0,0,0,50,53,5,8,
-		0,0,51,53,5,7,0,0,52,50,1,0,0,0,52,51,1,0,0,0,53,54,1,0,0,0,54,55,5,20,
-		0,0,55,56,3,2,1,0,56,57,5,6,0,0,57,84,1,0,0,0,58,59,5,16,0,0,59,60,5,14,
-		0,0,60,63,5,20,0,0,61,62,5,18,0,0,62,64,5,20,0,0,63,61,1,0,0,0,63,64,1,
-		0,0,0,64,65,1,0,0,0,65,66,3,10,5,0,66,67,5,6,0,0,67,84,1,0,0,0,68,69,7,
-		0,0,0,69,70,5,14,0,0,70,73,5,20,0,0,71,72,5,18,0,0,72,74,5,20,0,0,73,71,
-		1,0,0,0,73,74,1,0,0,0,74,75,1,0,0,0,75,84,5,6,0,0,76,77,7,1,0,0,77,78,
-		3,2,1,0,78,79,5,6,0,0,79,84,1,0,0,0,80,84,3,8,4,0,81,84,5,20,0,0,82,84,
-		3,14,7,0,83,40,1,0,0,0,83,43,1,0,0,0,83,52,1,0,0,0,83,58,1,0,0,0,83,68,
-		1,0,0,0,83,76,1,0,0,0,83,80,1,0,0,0,83,81,1,0,0,0,83,82,1,0,0,0,84,5,1,
-		0,0,0,85,91,3,4,2,0,86,87,4,3,0,1,87,88,5,19,0,0,88,90,3,6,3,0,89,86,1,
-		0,0,0,90,93,1,0,0,0,91,89,1,0,0,0,91,92,1,0,0,0,92,7,1,0,0,0,93,91,1,0,
-		0,0,94,100,5,11,0,0,95,96,3,6,3,0,96,97,5,13,0,0,97,99,1,0,0,0,98,95,1,
-		0,0,0,99,102,1,0,0,0,100,98,1,0,0,0,100,101,1,0,0,0,101,103,1,0,0,0,102,
-		100,1,0,0,0,103,104,3,6,3,0,104,105,5,12,0,0,105,9,1,0,0,0,106,108,5,3,
-		0,0,107,106,1,0,0,0,108,109,1,0,0,0,109,107,1,0,0,0,109,110,1,0,0,0,110,
-		11,1,0,0,0,111,113,5,3,0,0,112,111,1,0,0,0,113,114,1,0,0,0,114,112,1,0,
-		0,0,114,115,1,0,0,0,115,116,1,0,0,0,116,118,5,5,0,0,117,119,5,3,0,0,118,
-		117,1,0,0,0,119,120,1,0,0,0,120,118,1,0,0,0,120,121,1,0,0,0,121,13,1,0,
-		0,0,122,125,3,12,6,0,123,125,3,10,5,0,124,122,1,0,0,0,124,123,1,0,0,0,
-		125,15,1,0,0,0,15,22,29,34,38,43,52,63,73,83,91,100,109,114,120,124
+		2,44,8,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,54,8,2,1,2,1,2,1,2,1,2,1,
+		2,1,2,1,2,1,2,1,2,3,2,65,8,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,75,8,
+		2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,85,8,2,1,3,1,3,1,3,1,3,5,3,91,8,
+		3,10,3,12,3,94,9,3,1,4,1,4,1,4,1,4,5,4,100,8,4,10,4,12,4,103,9,4,1,4,1,
+		4,1,4,1,5,4,5,109,8,5,11,5,12,5,110,1,6,4,6,114,8,6,11,6,12,6,115,1,6,
+		1,6,4,6,120,8,6,11,6,12,6,121,1,7,1,7,3,7,126,8,7,1,7,0,0,8,0,2,4,6,8,
+		10,12,14,0,2,2,0,15,15,17,17,1,0,1,2,141,0,16,1,0,0,0,2,22,1,0,0,0,4,84,
+		1,0,0,0,6,86,1,0,0,0,8,95,1,0,0,0,10,108,1,0,0,0,12,113,1,0,0,0,14,125,
+		1,0,0,0,16,17,3,2,1,0,17,18,5,0,0,1,18,1,1,0,0,0,19,21,5,21,0,0,20,19,
+		1,0,0,0,21,24,1,0,0,0,22,20,1,0,0,0,22,23,1,0,0,0,23,34,1,0,0,0,24,22,
+		1,0,0,0,25,29,3,6,3,0,26,28,5,21,0,0,27,26,1,0,0,0,28,31,1,0,0,0,29,27,
+		1,0,0,0,29,30,1,0,0,0,30,33,1,0,0,0,31,29,1,0,0,0,32,25,1,0,0,0,33,36,
+		1,0,0,0,34,32,1,0,0,0,34,35,1,0,0,0,35,38,1,0,0,0,36,34,1,0,0,0,37,39,
+		3,6,3,0,38,37,1,0,0,0,38,39,1,0,0,0,39,3,1,0,0,0,40,41,5,20,0,0,41,85,
+		3,8,4,0,42,44,5,9,0,0,43,42,1,0,0,0,43,44,1,0,0,0,44,45,1,0,0,0,45,46,
+		5,10,0,0,46,47,5,20,0,0,47,48,6,2,-1,0,48,49,3,2,1,0,49,50,5,6,0,0,50,
+		85,1,0,0,0,51,54,5,8,0,0,52,54,5,7,0,0,53,51,1,0,0,0,53,52,1,0,0,0,54,
+		55,1,0,0,0,55,56,5,20,0,0,56,57,3,2,1,0,57,58,5,6,0,0,58,85,1,0,0,0,59,
+		60,5,16,0,0,60,61,5,14,0,0,61,64,5,20,0,0,62,63,5,18,0,0,63,65,5,20,0,
+		0,64,62,1,0,0,0,64,65,1,0,0,0,65,66,1,0,0,0,66,67,3,10,5,0,67,68,5,6,0,
+		0,68,85,1,0,0,0,69,70,7,0,0,0,70,71,5,14,0,0,71,74,5,20,0,0,72,73,5,18,
+		0,0,73,75,5,20,0,0,74,72,1,0,0,0,74,75,1,0,0,0,75,76,1,0,0,0,76,85,5,6,
+		0,0,77,78,7,1,0,0,78,79,3,2,1,0,79,80,5,6,0,0,80,85,1,0,0,0,81,85,3,8,
+		4,0,82,85,5,20,0,0,83,85,3,14,7,0,84,40,1,0,0,0,84,43,1,0,0,0,84,53,1,
+		0,0,0,84,59,1,0,0,0,84,69,1,0,0,0,84,77,1,0,0,0,84,81,1,0,0,0,84,82,1,
+		0,0,0,84,83,1,0,0,0,85,5,1,0,0,0,86,92,3,4,2,0,87,88,4,3,0,1,88,89,5,19,
+		0,0,89,91,3,6,3,0,90,87,1,0,0,0,91,94,1,0,0,0,92,90,1,0,0,0,92,93,1,0,
+		0,0,93,7,1,0,0,0,94,92,1,0,0,0,95,101,5,11,0,0,96,97,3,6,3,0,97,98,5,13,
+		0,0,98,100,1,0,0,0,99,96,1,0,0,0,100,103,1,0,0,0,101,99,1,0,0,0,101,102,
+		1,0,0,0,102,104,1,0,0,0,103,101,1,0,0,0,104,105,3,6,3,0,105,106,5,12,0,
+		0,106,9,1,0,0,0,107,109,5,3,0,0,108,107,1,0,0,0,109,110,1,0,0,0,110,108,
+		1,0,0,0,110,111,1,0,0,0,111,11,1,0,0,0,112,114,5,3,0,0,113,112,1,0,0,0,
+		114,115,1,0,0,0,115,113,1,0,0,0,115,116,1,0,0,0,116,117,1,0,0,0,117,119,
+		5,5,0,0,118,120,5,3,0,0,119,118,1,0,0,0,120,121,1,0,0,0,121,119,1,0,0,
+		0,121,122,1,0,0,0,122,13,1,0,0,0,123,126,3,12,6,0,124,126,3,10,5,0,125,
+		123,1,0,0,0,125,124,1,0,0,0,126,15,1,0,0,0,15,22,29,34,38,43,53,64,74,
+		84,92,101,110,115,121,125
 	};
 
 	public static readonly ATN _ATN =

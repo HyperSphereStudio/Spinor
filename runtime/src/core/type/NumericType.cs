@@ -8,10 +8,13 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using Core;
+using runtime.core.memory;
 using runtime.ILCompiler;
 using Module = Core.Module;
 
 namespace runtime.core.type;
+
+using static MethodAttributes;
 
 
 public sealed class NumericType : PrimitiveType {
@@ -27,24 +30,27 @@ public sealed class NumericType : PrimitiveType {
                     2 => typeof(Half),
                     4 => typeof(float),
                     8 => typeof(double),
+                    16 => typeof(Decimal),
                     _ => null
                 },
             
             BuiltinType.SignedInteger => 
                 bytelength switch {
-                1 => typeof(sbyte),
-                2 => typeof(short),
-                4 => typeof(int),
-                8 => typeof(long),
-                _ => null
+                    1 => typeof(sbyte),
+                    2 => typeof(Int16),
+                    4 => typeof(Int32),
+                    8 => typeof(Int64),
+                    16 => typeof(Int128),
+                    _ => null
                 },
             
             BuiltinType.UnsignedInteger => 
                 bytelength switch {
                     1 => typeof(byte),
-                    2 => typeof(ushort),
-                    4 => typeof(uint),
-                    8 => typeof(ulong),
+                    2 => typeof(UInt16),
+                    4 => typeof(UInt32),
+                    8 => typeof(UInt64),
+                    16 => typeof(UInt128),
                     _ => null
                 },
             
@@ -52,26 +58,46 @@ public sealed class NumericType : PrimitiveType {
         };
 
         if (numericType == null)
-            throw new SpinorException("Unknown Numeric Type! {0}::{1}", super.Builtin, bytelength);
+            throw new SpinorException($"Unknown Numeric Type! {super.Builtin}::{bytelength}");
         
         return _Create(name, super, numericType, tb, module, bytelength);
     }
-    
-    internal static NumericType _Create(Symbol name, AbstractType super, Type numericType, TypeBuilder tb, RuntimeModule module, int byteLength) {
+
+    private static NumericType _Create(Symbol name, AbstractType super, Type numericType, TypeBuilder tb, RuntimeModule module, int byteLength) {
         var fb = tb.DefineField("Value", numericType, FieldAttributes.Public | FieldAttributes.InitOnly);
-        var cb  = tb.CreateConstructor(Attributes.Public, numericType);
+        var cb  = tb.CreateConstructor(Public, numericType);
+        
         cb.DefineParameter(1, ParameterAttributes.None, "value");
         IlExprBuilder eb = new(cb);
         eb.Load.This(false);
         eb.Load.Arg(0);
         eb.Store.Field(fb);
         eb.ReturnVoid();
+        
+        IlExprBuilder mb = new(tb.CreateMethod("ToString", typeof(string), Public | Virtual));
+        tb.Override(mb, Reflect.StructToStringMI);
+        mb.Load.This(false);
+        mb.Load.FieldAddr(fb);
+        mb.Function.Invoke(numericType.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance, System.Type.EmptyTypes), true);
+        mb.Return();
+
+        mb = new(tb.DefineMethod("Serialize", 
+            Private | Virtual | Final | HideBySig, typeof(void), new []{typeof(SpinorSerializer)}));
+        mb.DefineArg(0, "x");
+        mb.Load.Arg(0);
+        mb.Load.This();
+        mb.Load.FieldValue(fb);
+        mb.Function.Invoke(Reflect.SerializedWriteMI.MakeGenericMethod(numericType));
+        tb.Override(mb, Reflect.SerializeMI);
+        mb.ReturnVoid();
+
         return new(name, super, module, tb, fb, byteLength);
     }
 
-    public override Type Initialize() {
+    protected override Type Initialize() {
         var ty = base.Initialize();
         ValueField = ty.GetField("Value");
+
         return ty;
     }
 }

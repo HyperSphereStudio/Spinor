@@ -15,10 +15,14 @@ using runtime.parse;
 
 namespace runtime.core.parse;
 
-public abstract class SuperSpinorParser : Parser
-{
-    public Lexer Lexer => (Lexer)((CommonTokenStream) TokenStream).TokenSource;
+public abstract class SuperSpinorParser : Parser {
+    public SpinorLexer Lexer => (SpinorLexer) ((CommonTokenStream) TokenStream).TokenSource;
     private SpinorOperator GetOp(int lt) => ((SpinorOperatorToken) TokenStream.LT(lt)).Operator;
+
+    public SpinorState SpinorState {
+        get => Lexer.SpinorState;
+        set => Lexer.SpinorState = value;
+    }
     
     protected int OperatorPrecedence => GetOp(1).Precedence;
 

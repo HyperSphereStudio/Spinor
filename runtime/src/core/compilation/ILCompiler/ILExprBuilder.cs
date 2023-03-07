@@ -12,7 +12,7 @@ public struct IlExprBuilder {
 
     public const MethodAttributes InterfaceAttributes = MethodAttributes.Final | MethodAttributes.HideBySig |
                                                         MethodAttributes.NewSlot | MethodAttributes.Virtual;
-        
+
     public static implicit operator MethodBuilder(IlExprBuilder b) => (MethodBuilder) b.InternalMethod;
     public static implicit operator ConstructorBuilder(IlExprBuilder b) => (ConstructorBuilder) b.InternalMethod;
 
@@ -27,8 +27,8 @@ public struct IlExprBuilder {
         public void Invoke(Type t, string name, params Type[] parameters) => Invoke(t.GetMethod(name, parameters));
         public void Invoke(Type t, params Type[] parameters) => Invoke(t.GetConstructor(parameters));
 
-        public void Invoke(MethodInfo info) =>
-            _eb._il.EmitCall(info.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, info, null);
+        public void Invoke(MethodInfo info, bool forceCall = false) =>
+            _eb._il.EmitCall((info.IsVirtual && !forceCall) ? OpCodes.Callvirt : OpCodes.Call, info, null);
 
         public void Invoke(IlExprBuilder fb, bool requiresConstructor = false, bool requiresMethod = false) {
             switch (fb.InternalMethod) {
@@ -64,7 +64,7 @@ public struct IlExprBuilder {
             
             //If the object is a value type, have to load the value 
             var dty = _eb.InternalMethod.DeclaringType;
-            if(dty.IsValueType)
+            if(dty?.IsValueType == false)
                 ValueObject(dty);    
         }
         
@@ -84,14 +84,14 @@ public struct IlExprBuilder {
 
         public void Type(System.Type t) {
             _eb._il.Emit(OpCodes.Ldtoken, t);
-            _eb.Function.Invoke(Reflect.GET_RUNTIME_TYPE_MI);
+            _eb.Function.Invoke(Reflect.GetRuntimeTypeMi);
         }
 
         public void FieldValue(FieldInfo f) => _eb._il.Emit(f.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, f);
         public void FieldValue(FieldBuilder fb) => _eb._il.Emit(fb.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, fb);
 
         public void FieldAddr(FieldInfo f) => _eb._il.Emit(f.IsStatic ? OpCodes.Ldsflda : OpCodes.Ldsfld, f);
-        public void FieldAddr(FieldBuilder fb) => _eb._il.Emit(fb.IsStatic ? OpCodes.Ldsflda : OpCodes.Ldsfld, fb);
+        public void FieldAddr(FieldBuilder fb) => _eb._il.Emit(fb.IsStatic ? OpCodes.Ldsflda : OpCodes.Ldflda, fb);
 
         public void OptFloat(double v) {
             if (v > float.MaxValue)
@@ -312,7 +312,20 @@ public struct IlExprBuilder {
     public void Sub() => Emit(OpCodes.Sub);
     public void Duplicate() => Emit(OpCodes.Dup);
     public void Box(Type t) => _il.Emit(OpCodes.Box, t);
-    public void Box<T>() => Box(typeof(T));
+    public void Unbox(Type t) => _il.Emit(OpCodes.Unbox, t);
+    public void Unbox() => _il.Emit(OpCodes.Unbox_Any);
+
+    public void DefineArg(int index, string name, ParameterAttributes attributes = ParameterAttributes.None) {
+        index++;
+        switch (InternalMethod) {
+            case MethodBuilder mb:
+                mb.DefineParameter(index, attributes, name);
+                break;
+            case ConstructorBuilder cb:
+                cb.DefineParameter(index, attributes, name);
+                break;
+        }
+    }
 
     public void ReturnVoid() {
         _il.Emit(OpCodes.Nop);

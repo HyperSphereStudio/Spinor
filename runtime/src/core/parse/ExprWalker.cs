@@ -11,8 +11,8 @@ using static runtime.core.Spinor;
 
 namespace runtime.core.parse;
 
-public interface IExprWalker : ISpinorExprWalker<Any, Expr> {
-   ExprType ISpinorExprWalker<Any, Expr>.GetType(Any a) => a switch {
+public abstract class AbstractSpinorExprWalker : AbstractSpinorExprWalker<Any, Expr> {
+   public override ExprType GetType(Any a) => a switch {
       Expr => ExprType.Expr,
       Symbol => ExprType.Symbol,
       LineNumberNode => ExprType.LineNumberNode,
@@ -30,17 +30,15 @@ public interface IExprWalker : ISpinorExprWalker<Any, Expr> {
       throw new SpinorException("Unknown Expr Type!");
    }
 
-   Expr ISpinorExprWalker<Any, Expr>.ToExpr(Any a) => (Expr) a;
-   bool ISpinorExprWalker<Any, Expr>.ToBool(Any a) => UnboxBool(a);
-   void ISpinorExprWalker<Any, Expr>.ToLineNumberNode(Any a, out int line, out string file) {
+   public override Expr ToExpr(Any a) => (Expr) a;
+   public override bool ToBool(Any a) => UnboxBool(a);
+   public override void ToLineNumberNode(Any a, out int line, out string file) {
       var l = (LineNumberNode) a;
       line = l.Line;
       file = l.File;
    }
    
-   Symbol ISpinorExprWalker<Any, Expr>.ToSymbol(Any a) => (Symbol)a;
-   long ISpinorExprWalker<Any, Expr>.ToInteger(Any a) => UnboxInt64(a);
-   double ISpinorExprWalker<Any, Expr>.ToFloat(Any a) => Unbox<double>(a);
+   public override Symbol ToSymbol(Any a) => (Symbol)a;
+   public override long ToInteger(Any a) => UnboxInt64(a);
+   public override double ToFloat(Any a) => Unbox<double>(a);
 }
-
-public sealed class ExprWalker : IExprWalker, IImplSpinorWalker<Any, Expr> {}

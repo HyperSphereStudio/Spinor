@@ -7,13 +7,20 @@
 using System;
 using System.Reflection;
 using Core;
+using runtime.core.memory;
 
 namespace runtime.core;
 
 public static class Reflect
 {
-    public static readonly Type IAny_TY = typeof(Any).Module.GetType("Core.IAny`1");
-    public static readonly Type IPrimitiveValue_TY = typeof(PrimitiveType).Module.GetType("Core.IPrimitiveValue`1");
     public static readonly MethodInfo
-        GET_RUNTIME_TYPE_MI = typeof(System.Type).GetMethod("GetTypeFromHandle");
+        GetRuntimeTypeMi = typeof(Type).GetMethod("GetTypeFromHandle"),
+        RuntimeSTypeMi = typeof(IAny).GetMethod("get_RuntimeType"),
+        GetTypeSTypeMI = typeof(Any).GetMethod("get_Type"),
+        ObjectToStringMI = typeof(object).GetMethod("ToString"),
+        ObjectGetHashCodeMI = typeof(object).GetMethod("GetHashCode"),
+        StructToStringMI = typeof(ValueType).GetMethod("ToString"),
+        StructGetHashCodeMI = typeof(ValueType).GetMethod("GetHashCode"),
+        SerializeMI = typeof(Any).GetMethod("Serialize", BindingFlags.NonPublic | BindingFlags.Instance),
+        SerializedWriteMI = typeof(SpinorSerializer).GetMethod("Write");
 }

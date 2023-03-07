@@ -38,5 +38,5 @@ LineComment=25
 'type'=14
 'abstract'=15
 'primitive'=16
-'builtin'=17
+'abstractbuiltin'=17
 '<:'=18

@@ -14,15 +14,15 @@ topExpr: exprBlock EOF;
 exprBlock: Termination* (expr[0] Termination*)* expr[0]?;
 
 primaryExpr: 
-    Name tuple                                                      #functionCall
-  | mutable=MUTABLE? STRUCT Name exprBlock END                      #struct
-  | (MODULE | bare=BAREMODULE) Name exprBlock END                   #module
-  | PRIMITIVE TYPE name=Name (EXTEND extends=Name)? integer END     #primitive
-  | (ABSTRACT|BUILTIN) TYPE name=Name (EXTEND extends=Name)? END    #abstractOrBuiltin
-  | head=(QUOTE|BEGIN) exprBlock END                                #block
-  | tuple                                                           #tupleExpr
-  | Name                                                            #nameExpr
-  | literal                                                         #literalExpr
+    Name tuple                                                                              #functionCall
+  | mutable=MUTABLE? STRUCT Name {SpinorState = SpinorState.Expression;} exprBlock END      #struct
+  | (MODULE | bare=BAREMODULE) Name exprBlock END                                           #module
+  | PRIMITIVE TYPE name=Name (EXTEND extends=Name)? integer END                             #primitive
+  | (ABSTRACT|BUILTIN) TYPE name=Name (EXTEND extends=Name)? END                            #abstractOrBuiltin
+  | head=(QUOTE|BEGIN) exprBlock END                                                        #block
+  | tuple                                                                                   #tupleExpr
+  | Name                                                                                    #nameExpr
+  | literal                                                                                 #literalExpr
 ;
 
 expr[int p]: primaryExpr ({OperatorPrecedence >= $p}? BinaryOrAssignableOp expr[NextOperatorPrecedence])*;
