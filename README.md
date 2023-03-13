@@ -35,5 +35,5 @@ Julia Grammer. Make it Julia v1.9 Compatible and be able to lower to CLR.
 * Spinor Standard Library. Creation of the Julia++ STL. 
 
 # Evaluation Pipeline
-![Evaluation Pipeline](drawings/JuliaEvaluationPipeline.png)
+![Evaluation Pipeline](drawings/SpinorEvaluationPipeline.png)
 
