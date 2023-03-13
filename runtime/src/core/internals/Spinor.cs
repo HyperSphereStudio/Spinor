@@ -34,8 +34,8 @@ public class Spinor
     public static AbstractType Exception { get; internal set; }
     public static Module Core { get; internal set; }
     public static Module Base { get; internal set; }
-    public static RuntimeTopModule Main { get; internal set; } 
-    public static RuntimeTopModule Root { get; internal set; }
+    public static CompileTimeTopModule Main { get; internal set; } 
+    public static CompileTimeTopModule Root { get; internal set; }
     
     
     #region JLPort

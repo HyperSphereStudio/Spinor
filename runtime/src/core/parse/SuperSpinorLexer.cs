@@ -13,12 +13,9 @@ using runtime.parse;
 
 namespace runtime.core.parse;
 
-public enum SpinorState : byte {
-    Expression,
-    Type
-}
-
 public abstract class SuperSpinorLexer : Lexer {
+    public bool BinaryOpPossible = true;
+
     public void EmitToken(IToken t, int consumeLength = 0) {
         Token = t;
         if(consumeLength != 0)
@@ -26,7 +23,7 @@ public abstract class SuperSpinorLexer : Lexer {
     }
 
     public bool IsBinaryOrAssignableOp() {
-        if (SpinorState != SpinorState.Expression)
+        if (!BinaryOpPossible)
             return false;
         
         if (!SpinorOperator.GetOp(InputStream, out var v) || !v.Binary) 
@@ -39,8 +36,6 @@ public abstract class SuperSpinorLexer : Lexer {
         
         return true;
     }
-
-    public SpinorState SpinorState = SpinorState.Expression;
     public SuperSpinorLexer(ICharStream input) : base(input) {}
     public SuperSpinorLexer(ICharStream input, TextWriter output, TextWriter errorOutput) : base(input, output, errorOutput){}
 

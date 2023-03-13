@@ -16,15 +16,17 @@ using runtime.parse;
 namespace runtime.core.parse;
 
 public abstract class SuperSpinorParser : Parser {
-    public SpinorLexer Lexer => (SpinorLexer) ((CommonTokenStream) TokenStream).TokenSource;
+    public SpinorLexer Lexer { get; private set; }
     private SpinorOperator GetOp(int lt) => ((SpinorOperatorToken) TokenStream.LT(lt)).Operator;
-
-    public SpinorState SpinorState {
-        get => Lexer.SpinorState;
-        set => Lexer.SpinorState = value;
-    }
     
     protected int OperatorPrecedence => GetOp(1).Precedence;
+
+    public bool TargetPrecedence(int i) {
+        Console.WriteLine("Test!");
+        int current_pres = OperatorPrecedence;
+        Console.WriteLine($"T:{current_pres} i:{i}");
+        return current_pres >= i;
+    }
 
     protected int NextOperatorPrecedence {
         get {
@@ -38,9 +40,9 @@ public abstract class SuperSpinorParser : Parser {
     protected SuperSpinorParser(ITokenStream input) : base(input) {}
     protected SuperSpinorParser(ITokenStream input, TextWriter output, TextWriter errorOutput): base(input, output, errorOutput) {}
     protected void SetInput(BaseInputCharStream stream) {
-        var lex = Lexer;
-        lex.SetInputStream(stream);
-        lex.Reset();
+        Lexer = (SpinorLexer) ((CommonTokenStream) TokenStream).TokenSource;
+        Lexer.SetInputStream(stream);
+        Lexer.Reset();
         Reset();
     }
     public static string PrintSyntaxTree(Parser parser, IParseTree root) {
@@ -49,19 +51,17 @@ public abstract class SuperSpinorParser : Parser {
         return buf.ToString();
     }
     private static void Recursive(IParseTree aRoot, StringBuilder buf, int offset, string[] ruleNames) {
-        for (int i = 0; i < offset; i++) buf.Append("  ");
+        for (var i = 0; i < offset; i++)
+            buf.Append("  ");
         buf.Append(Trees.GetNodeText(aRoot, ruleNames)).Append("\n");
-        if (aRoot is ParserRuleContext)
-        {
-            ParserRuleContext prc = (ParserRuleContext)aRoot;
-            if (prc.children != null)
-            {
-                foreach (IParseTree child in prc.children)
-                {
-                    Recursive(child, buf, offset + 1, ruleNames);
-                }
-            }
-        }
+        if (aRoot is not ParserRuleContext prc) 
+            return;
+
+        if (prc.children == null) 
+            return;
+        
+        foreach (IParseTree child in prc.children)
+            Recursive(child, buf, offset + 1, ruleNames);
     }
 
     public static void PrintToken(IToken t) => Console.WriteLine(SpinorLexer.DefaultVocabulary.GetDisplayName(t.Type) + ":" + t.Text);

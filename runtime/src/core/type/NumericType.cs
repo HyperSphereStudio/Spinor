@@ -23,7 +23,7 @@ public sealed class NumericType : PrimitiveType {
     private NumericType(Symbol name, AbstractType super, Module module, Type underlyingType, FieldInfo valueField, int bytecount) :
         base(name, super, module, underlyingType, bytecount) => ValueField = valueField;
 
-    internal static NumericType _Create(Symbol name, AbstractType super, TypeBuilder tb, RuntimeModule module, int bytelength) {
+    internal static NumericType _Create(Symbol name, AbstractType super, TypeBuilder tb, CompileTimeModule module, int bytelength) {
         Type numericType = super.Builtin switch {
             BuiltinType.FloatingNumber =>
                 bytelength switch {
@@ -63,7 +63,7 @@ public sealed class NumericType : PrimitiveType {
         return _Create(name, super, numericType, tb, module, bytelength);
     }
 
-    private static NumericType _Create(Symbol name, AbstractType super, Type numericType, TypeBuilder tb, RuntimeModule module, int byteLength) {
+    private static NumericType _Create(Symbol name, AbstractType super, Type numericType, TypeBuilder tb, CompileTimeModule module, int byteLength) {
         var fb = tb.DefineField("Value", numericType, FieldAttributes.Public | FieldAttributes.InitOnly);
         var cb  = tb.CreateConstructor(Public, numericType);
         

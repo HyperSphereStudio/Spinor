@@ -47,67 +47,73 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitExprBlock([NotNull] SpinorParser.ExprBlockContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>functionCall</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitFunctionCall([NotNull] SpinorParser.FunctionCallContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitStruct([NotNull] SpinorParser.StructContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>module</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitModule([NotNull] SpinorParser.ModuleContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>primitive</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitPrimitive([NotNull] SpinorParser.PrimitiveContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>abstractOrBuiltin</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>block</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitBlock([NotNull] SpinorParser.BlockContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>tupleExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>nameExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitNameExpr([NotNull] SpinorParser.NameExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>literalExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitLiteralExpr([NotNull] SpinorParser.LiteralExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBinaryExpr([NotNull] SpinorParser.BinaryExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="SpinorParser.expr"/>.
 	/// </summary>

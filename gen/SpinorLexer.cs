@@ -112,22 +112,22 @@ public partial class SpinorLexer : SuperSpinorLexer {
 	}
 	private void END_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
-		case 0: SpinorState = SpinorState.Expression; break;
+		case 0: BinaryOpPossible = true; break;
 		}
 	}
 	private void ABSTRACT_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
-		case 1: SpinorState = SpinorState.Type; break;
+		case 1: BinaryOpPossible = false; break;
 		}
 	}
 	private void PRIMITIVE_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
-		case 2: SpinorState = SpinorState.Type; break;
+		case 2: BinaryOpPossible = false; break;
 		}
 	}
 	private void BUILTIN_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
-		case 3: SpinorState = SpinorState.Type; break;
+		case 3: BinaryOpPossible = false; break;
 		}
 	}
 	public override bool Sempred(RuleContext _localctx, int ruleIndex, int predIndex) {

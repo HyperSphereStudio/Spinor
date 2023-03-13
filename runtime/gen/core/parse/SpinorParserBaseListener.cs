@@ -63,130 +63,142 @@ public partial class SpinorParserBaseListener : ISpinorParserListener {
 	public virtual void ExitExprBlock([NotNull] SpinorParser.ExprBlockContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>functionCall</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterFunctionCall([NotNull] SpinorParser.FunctionCallContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>functionCall</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitFunctionCall([NotNull] SpinorParser.FunctionCallContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterStruct([NotNull] SpinorParser.StructContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStruct([NotNull] SpinorParser.StructContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>module</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterModule([NotNull] SpinorParser.ModuleContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>module</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitModule([NotNull] SpinorParser.ModuleContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>primitive</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterPrimitive([NotNull] SpinorParser.PrimitiveContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>primitive</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitPrimitive([NotNull] SpinorParser.PrimitiveContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>abstractOrBuiltin</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>abstractOrBuiltin</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>block</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterBlock([NotNull] SpinorParser.BlockContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>block</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitBlock([NotNull] SpinorParser.BlockContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>tupleExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterTupleExpr([NotNull] SpinorParser.TupleExprContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>tupleExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitTupleExpr([NotNull] SpinorParser.TupleExprContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>nameExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterNameExpr([NotNull] SpinorParser.NameExprContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>nameExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNameExpr([NotNull] SpinorParser.NameExprContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>literalExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void EnterLiteralExpr([NotNull] SpinorParser.LiteralExprContext context) { }
 	/// <summary>
 	/// Exit a parse tree produced by the <c>literalExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitLiteralExpr([NotNull] SpinorParser.LiteralExprContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBinaryExpr([NotNull] SpinorParser.BinaryExprContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBinaryExpr([NotNull] SpinorParser.BinaryExprContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SpinorParser.expr"/>.
 	/// <para>The default implementation does nothing.</para>

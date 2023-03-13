@@ -37,7 +37,7 @@ public sealed class StructType : SType {
          Kind = kind;
    }
    
-   public static StructType Create(StructKind kind, Symbol name, AbstractType super, RuntimeModule module, params Field[] fields) {
+   public static StructType Create(StructKind kind, Symbol name, AbstractType super, CompileTimeModule module, params Field[] fields) {
       super ??= Any.RuntimeType;
       var parent = kind == StructKind.Struct ? typeof(ValueType) : typeof(object);
       var ta = Public | Sealed;

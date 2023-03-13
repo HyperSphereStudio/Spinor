@@ -30,7 +30,7 @@ public sealed class AbstractType : SType {
 
    internal AbstractType(Symbol name, AbstractType super, Module module, Type underlyingType, BuiltinType builtin) : base(name, super, module, underlyingType, false) => Builtin = builtin;
    
-   internal static AbstractType Create(Symbol name, AbstractType super, RuntimeModule module, BuiltinType builtinType = BuiltinType.None) {
+   internal static AbstractType Create(Symbol name, AbstractType super, CompileTimeModule module, BuiltinType builtinType = BuiltinType.None) {
       super ??= Any.RuntimeType;
       var ty = module.ModuleBuilder.DefineType(module.GetFullName(name), Interface | Public | Abstract);
       ty.AddInterfaceImplementation(super.UnderlyingType);

@@ -11,11 +11,11 @@ options { language=CSharp; superClass=SuperSpinorParser; tokenVocab=SpinorLexer;
 @header{using runtime.core.parse;}
 
 topExpr: exprBlock EOF;
-exprBlock: Termination* (expr[0] Termination*)* expr[0]?;
+exprBlock: Termination* (expr Termination*)*;
 
-primaryExpr: 
+primitiveExpr: 
     Name tuple                                                                              #functionCall
-  | mutable=MUTABLE? STRUCT Name {SpinorState = SpinorState.Expression;} exprBlock END      #struct
+  | mutable=MUTABLE? STRUCT Name exprBlock END                                              #struct
   | (MODULE | bare=BAREMODULE) Name exprBlock END                                           #module
   | PRIMITIVE TYPE name=Name (EXTEND extends=Name)? integer END                             #primitive
   | (ABSTRACT|BUILTIN) TYPE name=Name (EXTEND extends=Name)? END                            #abstractOrBuiltin
@@ -25,9 +25,10 @@ primaryExpr:
   | literal                                                                                 #literalExpr
 ;
 
-expr[int p]: primaryExpr ({OperatorPrecedence >= $p}? BinaryOrAssignableOp expr[NextOperatorPrecedence])*;
+binaryExpr[int p]: lhs=primitiveExpr {TargetPrecedence($p)}? BinaryOrAssignableOp binaryExpr[NextOperatorPrecedence]* rhs=primitiveExpr;
+expr: binaryExpr[0] | primitiveExpr;
 
-tuple: RPAR (expr[0] COMMA)* expr[0] LPAR;
+tuple: RPAR (expr COMMA)* expr LPAR;
 integer: DIGIT+;  
 float: DIGIT+ DOT DIGIT+;
                   

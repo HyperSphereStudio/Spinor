@@ -15,7 +15,7 @@ using runtime.Utils;
 namespace runtime.core.compilation.Expr;
 
 public class GlobalExprInterpreter : AbstractSpinorExprWalker {
-   public readonly RuntimeModule Module;
+   public readonly CompileTimeModule Module;
    
    private readonly ExprLowerer Lowerer;
    private readonly Dictionary<Symbol, Any> Locals = new();
@@ -23,7 +23,7 @@ public class GlobalExprInterpreter : AbstractSpinorExprWalker {
    private int Line = 0;
    private string File = "";
 
-   public GlobalExprInterpreter(RuntimeModule module) {
+   public GlobalExprInterpreter(CompileTimeModule module) {
       Module = module;
       Lowerer = new(module);
    }

@@ -64,20 +64,18 @@ public abstract class Module : IAny {
     }
 }
 
-public class RuntimeModule : Module {
-    public const TypeAttributes RuntimeModuleAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed;
-
+public class CompileTimeModule : Module {
     public readonly Dictionary<Symbol, Binding> Names = new();
     public readonly HashSet<Module> Usings = new();
     public ILTypeBuilder ModuleTypeBuilder { get; private set; }
     private Type _underlyingType;
-    public override Type UnderlyingType { get; }
+    public override Type UnderlyingType => _underlyingType;
     public ModuleBuilder ModuleBuilder => ((SpinorRuntimeContext) Parent.Context).ModuleBuilder;
     public readonly string LongName;
 
-    protected RuntimeModule(Symbol name, RuntimeModule parent, SpinorRuntimeContext ctx) : base(name, parent) {
+    protected CompileTimeModule(Symbol name, CompileTimeModule parent, SpinorRuntimeContext ctx) : base(name, parent) {
         LongName = parent == null ? "Root." + name.String : parent.GetFullName(name);
-        var tb = ctx.ModuleBuilder.DefineType(LongName, RuntimeModuleAttributes);
+        var tb = ctx.ModuleBuilder.DefineType(LongName, TypeAttributes.Public | TypeAttributes.Sealed  | TypeAttributes.Abstract | TypeAttributes.Class);
         ModuleTypeBuilder = new(tb);
         _underlyingType = tb;
     }
@@ -123,7 +121,7 @@ public class RuntimeModule : Module {
 
     public AbstractType NewAbstractType(Symbol name, AbstractType super, BuiltinType builtinType = BuiltinType.None) => AbstractType.Create(name, super, this, builtinType);
     public PrimitiveType NewPrimitiveType(Symbol name, AbstractType super, int bytelength) => PrimitiveType.Create(name, super, this, bytelength);
-    public RuntimeModule NewModule(Symbol name, bool isBare) => new(name, this, (SpinorRuntimeContext) Context);
+    public CompileTimeModule NewModule(Symbol name, bool isBare) => new(name, this, (SpinorRuntimeContext) Context);
     public StructType NewStructType(StructKind kind, Symbol name, AbstractType super, params Field[] fields) => StructType.Create(kind, name, super, this, fields);
     
     public void Initialize() {
@@ -136,20 +134,20 @@ public class RuntimeModule : Module {
     public Any Evaluate(Any a) => new GlobalExprInterpreter(this).Evaluate(a);
 }
 
-public sealed class RuntimeTopModule : RuntimeModule, ITopModule{
+public sealed class CompileTimeTopModule : CompileTimeModule, ITopModule{
     public override SpinorRuntimeContext Context { get; }
 
-    public RuntimeTopModule(Symbol name, SpinorRuntimeContext runtimeContext) : base(name, null, runtimeContext) {
+    public CompileTimeTopModule(Symbol name, SpinorRuntimeContext runtimeContext) : base(name, null, runtimeContext) {
         Context = runtimeContext;
     }
 }
 
-public class CompiledModule : Module {
+public class RuntimeModule : Module {
     public override Type UnderlyingType { get; }
     public readonly ImmutableDictionary<Symbol, Binding> Names;
     public readonly ImmutableHashSet<Module> Usings;
 
-    public CompiledModule(Symbol name, Module parent, Type underlyingType) : base(name, parent){
+    public RuntimeModule(Symbol name, Module parent, Type underlyingType) : base(name, parent){
         Names = SpinorOptions.ReflectionEnabled ? 
                 ImmutableDictionary.CreateRange(underlyingType.GetFields().
                         Select(x => new KeyValuePair<Symbol, Binding>((Symbol) x.Name, new(x, this, true)))) 
@@ -170,10 +168,10 @@ public class CompiledModule : Module {
     }
 }
 
-public class CompiledTopModule : CompiledModule, ITopModule {
+public class RuntimeTopModule : RuntimeModule, ITopModule {
     public override SpinorCompiledContext Context { get; }
 
-    public CompiledTopModule(Symbol name, SpinorCompiledContext context, Type underlyingType) : base(name, null, underlyingType) {
+    public RuntimeTopModule(Symbol name, SpinorCompiledContext context, Type underlyingType) : base(name, null, underlyingType) {
         Context = context;
     }
 }

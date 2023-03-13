@@ -23,9 +23,9 @@ public record Literal(Any Value, ExprType Type) : ILoweredExpr;
 
 internal class ExprLowerer : AbstractSpinorExprWalker {
    public ILoweredExpr LastExpr;
-   private readonly RuntimeModule _Module;
+   private readonly CompileTimeModule _Module;
    
-   internal ExprLowerer(RuntimeModule module) {
+   internal ExprLowerer(CompileTimeModule module) {
       _Module = module;
    }
 

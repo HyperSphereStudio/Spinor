@@ -58,7 +58,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitExprBlock([NotNull] SpinorParser.ExprBlockContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>functionCall</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -69,7 +69,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitFunctionCall([NotNull] SpinorParser.FunctionCallContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -80,7 +80,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitStruct([NotNull] SpinorParser.StructContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>module</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -91,7 +91,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitModule([NotNull] SpinorParser.ModuleContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>primitive</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -102,7 +102,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitPrimitive([NotNull] SpinorParser.PrimitiveContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>abstractOrBuiltin</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -113,7 +113,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>block</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -124,7 +124,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitBlock([NotNull] SpinorParser.BlockContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>tupleExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -135,7 +135,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>nameExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -146,7 +146,7 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	public virtual Result VisitNameExpr([NotNull] SpinorParser.NameExprContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>literalExpr</c>
-	/// labeled alternative in <see cref="SpinorParser.primaryExpr"/>.
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -155,6 +155,16 @@ public partial class SpinorParserBaseVisitor<Result> : AbstractParseTreeVisitor<
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitLiteralExpr([NotNull] SpinorParser.LiteralExprContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitBinaryExpr([NotNull] SpinorParser.BinaryExprContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="SpinorParser.expr"/>.
 	/// <para>

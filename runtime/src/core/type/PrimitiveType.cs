@@ -36,7 +36,7 @@ public class PrimitiveType : SType
         ByteCount = (ushort) bytecount;
     }
 
-    internal static PrimitiveType Create(Symbol name, AbstractType super, RuntimeModule module, int bytelength) {
+    internal static PrimitiveType Create(Symbol name, AbstractType super, CompileTimeModule module, int bytelength) {
         PrimitiveType pty = null;
         super ??= Any.RuntimeType;
         

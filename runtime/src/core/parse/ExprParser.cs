@@ -28,27 +28,24 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
     public Any Parse(FileInfo file, bool createLineNumberNodes = true) =>
         Parse(new AntlrFileStream(file.FullName), file.FullName, createLineNumberNodes);
 
-    public Any Parse(BaseInputCharStream stream, string file = null, bool createLineNumberNodes = true)
-    {
-        if (!_init)
-        {
+    public Any Parse(BaseInputCharStream stream, string file = null, bool createLineNumberNodes = true) {
+        if (!_init) {
             RemoveErrorListeners();
             AddErrorListener(this);
-            var l = Lexer;
-            l.RemoveErrorListeners();
-            l.AddErrorListener(this);
+            SetInput(stream);
+            Lexer.RemoveErrorListeners();
+            Lexer.AddErrorListener(this);
             _init = true;
-        }
-
-        SetInput(stream);
+        }else SetInput(stream);
+        
         _file = file;
         _createLineNumberNodes = createLineNumberNodes;
-         //     Debug();
+        Debug();
         var ctx = topExpr();
         return ctx.ChildCount == 0 ? null : Parse(ASTSymbols.Block, ctx.exprBlock(), true);
     }
 
-    private Any Parse(PrimaryExprContext ctx)
+    private Any Parse(PrimitiveExprContext ctx)
     {
         return ctx switch
         {
@@ -75,46 +72,31 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
         return e;
     }
 
-    private Any Parse(ExprContext ctx)
-    {
-        var bops = ctx.BinaryOrAssignableOp();
-        if (bops.Length == 0)
-            return Parse(ctx.primaryExpr()); //Unwrap Normal Expr
+    private Any Parse(BinaryExprContext ctx) {
+        var op = (SpinorOperatorToken) ctx.BinaryOrAssignableOp().Symbol;
+        var e = ParseBinaryOrAssignment(op, Parse(ctx.lhs), Parse(ctx.rhs));
 
-        var exprs = ctx.expr();
-        var op = (SpinorOperatorToken)bops[0].Symbol;
-        var e = ParseBinaryOrAssignment(op, Parse(ctx.primaryExpr()), Parse(exprs[0]));
-
-        var i = 1;
-        if (!op.Operator.Chainable)
-            goto UnChainable;
-
-        Chainable:
-        //BOPS will all be the same precedence. We can "chain" together chainable same precedence operators
-        for (; i < bops.Length; i++)
-        {
-            var newOp = (SpinorOperatorToken)bops[i].Symbol;
-            if (!op.Equals(newOp))
-                goto UnChainable;
-            e.Args.Add(Parse(exprs[i]));
+        foreach (var a in ctx.binaryExpr()) {
+            var newOp = (SpinorOperatorToken) a.BinaryOrAssignableOp().Symbol;
+            if (op.Operator.Chainable && op.Equals(newOp))
+                e.Args.Add(Parse(a));    
+            else {
+                op = newOp;
+                e = ParseBinaryOrAssignment(op, e, Parse(a));
+            }
         }
-
-        UnChainable:
-        for (; i < bops.Length; i++)
-        {
-            op = (SpinorOperatorToken)bops[i].Symbol;
-            e = ParseBinaryOrAssignment(op, e, Parse(exprs[i]));
-            if (op.Operator.Chainable)
-                goto Chainable;
-        }
-
         return e;
+    }
+    
+    private Any Parse(ExprContext ctx) {
+        var pe = ctx.primitiveExpr();
+        return pe != null ? Parse(pe) : Parse(ctx.binaryExpr());
     }
 
     private Expr ParseBinaryOrAssignment(SpinorOperatorToken opTok, Any lhs, Any rhs) =>
         opTok.OperatorKind == OperatorKind.Binary
             ? new(ASTSymbols.Call, (Symbol)opTok.Text, lhs, rhs)
-            : new((Symbol)opTok.Text, lhs, rhs);
+            : new((Symbol) opTok.Text, lhs, rhs);
 
     private Any Parse(BlockContext ctx) =>
         Parse(ctx.head.Type == BEGIN ? ASTSymbols.Block : ASTSymbols.Quote, ctx.exprBlock());

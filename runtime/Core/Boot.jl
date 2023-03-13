@@ -2,6 +2,9 @@
 #Types are built organically from this File
 #Only define abstract types, abstractbuiltin & primitive types in this file
 
+x * x
+
+#=
 abstract type Number end
 abstract type Real <: Number end
 abstract type Integer <: Real end
@@ -37,4 +40,4 @@ abstract type IO end
 
 struct s 
     x
-end
+end=#

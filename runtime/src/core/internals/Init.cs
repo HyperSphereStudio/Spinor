@@ -18,7 +18,7 @@ namespace runtime.core;
 public static class Init {
     private static void InitMainModule(SpinorRuntimeContext ctx) {
         ProgramPhase = SpinorPhase.Initializing;
-        Main = new RuntimeTopModule(CommonSymbols.Main, ctx);
+        Main = new CompileTimeTopModule(CommonSymbols.Main, ctx);
         Root = Main;
         
     }
@@ -27,7 +27,7 @@ public static class Init {
         ProgramPhase = SpinorPhase.BootstrappingReal;
         
         var ctx = new ClrSpinorRuntimeContext("Core", "0.0.0.1");
-        Root = new RuntimeTopModule(CommonSymbols.Core, ctx);
+        Root = new CompileTimeTopModule(CommonSymbols.Core, ctx);
         Spinor.Core = Root;
         
         Any.RuntimeType = new AbstractType(CommonSymbols.Any, null, Root, typeof(IAny), BuiltinType.None);
@@ -52,6 +52,7 @@ public static class Init {
         BoxedPrimitiveType<bool>.Create(Bool);
         
         ProgramPhase = SpinorPhase.BootstrappingReal;
+        ((Expr) ParseFile("runtime/Core/Boot.jl")).WriteCode(Console.Out);
         EvalFromFile("runtime/Core/Boot.jl");
 
         //Load the Primitive Types from Boot then Create boxing functions foreach of them

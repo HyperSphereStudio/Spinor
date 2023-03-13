@@ -10,6 +10,6 @@ namespace Core;
 
 public static class Meta
 {
-   public static ILoweredExpr Lower(RuntimeModule m, Any expr) => new ExprLowerer(m).Lower(expr);
+   public static ILoweredExpr Lower(CompileTimeModule m, Any expr) => new ExprLowerer(m).Lower(expr);
 
 }

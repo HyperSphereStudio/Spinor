@@ -52,7 +52,7 @@ public abstract class SType : IAny {
             return;
 
         if (Spinor.ProgramPhase != SpinorPhase.BootstrappingFake)
-            ((RuntimeModule) module).SetConst(name, this);
+            ((CompileTimeModule) module).SetConst(name, this);
         
         var fb = tb.CreateField("__RuntimeType__", typeof(SType), FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly);
         var sMB = tb.ImplementBackedGetMethod("RuntimeType", fb, Static);
@@ -70,7 +70,7 @@ public abstract class SType : IAny {
         tb.CreateProperty("Type", typeof(SType)).SetGetMethod(sMB);
     }
 
-    public static SType GetType(Type ty, RuntimeModule rm = null) => CachedSystem2SpinorTypes.TryGetValue(ty, out var v) ? v : RegisterSystemType(ty, CreateTypeFromSystem(ty, rm));
+    public static SType GetType(Type ty, CompileTimeModule rm = null) => CachedSystem2SpinorTypes.TryGetValue(ty, out var v) ? v : RegisterSystemType(ty, CreateTypeFromSystem(ty, rm));
 
     private static SType RegisterSystemType(Type sty, SType st) {
         CachedSpinor2SystemTypes.Add(st, sty);
@@ -78,9 +78,9 @@ public abstract class SType : IAny {
         return st;
     }
 
-    private static AbstractType CreateSuperType(Type t, Type super, RuntimeModule rm) => super == null ? Any.RuntimeType : (AbstractType) GetType(t.BaseType, rm);
+    private static AbstractType CreateSuperType(Type t, Type super, CompileTimeModule rm) => super == null ? Any.RuntimeType : (AbstractType) GetType(t.BaseType, rm);
 
-    public static SType CreateTypeFromSystem(Type t, RuntimeModule rm = null) {
+    public static SType CreateTypeFromSystem(Type t, CompileTimeModule rm = null) {
         if (CachedSystem2SpinorTypes.TryGetValue(t, out var v))
             return v;
         
