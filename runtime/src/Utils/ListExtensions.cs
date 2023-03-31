@@ -14,6 +14,12 @@ namespace runtime.Utils;
 
 public static class ListExtensions
 {
+    public static void Put<K, V>(this IDictionary<K, V> d, K k, V v) {
+        if (d.ContainsKey(k))
+            d[k] = v;
+        d.Add(k, v);
+    }
+    
     public static bool Visit<T>(this IEnumerable<T> e, Func<T, bool> v) {
         foreach (var t in e)
             if (!v(t))
@@ -30,17 +36,16 @@ public static class ListExtensions
     }
     
     public static TextWriter Print<T>(this IEnumerable<T> l, TextWriter tw = null, Func<T, string> toStringMethod = null, int depth = 3) {
-        tw ??= Console.Out;
         if (depth-- == 0)
             return tw;
-        bool isFirst = true;
+        var isFirst = true;
         toStringMethod ??= x => x.ToString();
+        tw ??= Console.Out;
         
         tw.Write(typeof(T).Name);
         tw.Write("[");
         
-        foreach (var x in l)
-        {
+        foreach (var x in l) {
             if (isFirst)
                 isFirst = false;
             else 
@@ -53,11 +58,11 @@ public static class ListExtensions
     }
 
     public static TextWriter Print(this IEnumerable l, Type elType, Func<object, string> toStringMethod = null, TextWriter tw = null, int depth = 3) {
-        tw ??= Console.Out;
         if (depth-- == 0)
             return tw;
-        bool isFirst = true;
+        var isFirst = true;
         toStringMethod ??= x => x.ToString();
+        tw ??= Console.Out;
         
         tw.Write(elType.Name);
         tw.Write("[");

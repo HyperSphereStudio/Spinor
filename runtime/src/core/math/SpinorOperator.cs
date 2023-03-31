@@ -1,11 +1,10 @@
 global using SpinorTokenType = System.UInt16;
-
 using System;
 using System.Collections.Generic;
 using Antlr4.Runtime;
-using Core;
+using runtime.stdlib;
 
-namespace runtime.core.Compilation;
+namespace runtime.core.math;
 
 [Flags]
 public enum OperatorType : ushort {
@@ -63,7 +62,7 @@ public class SpinorOperator {
         AddOperations(OperatorType.Binary | OperatorType.Infix | OperatorType.Assignable | OperatorType.RightAssociative, 0, "=");
      
         AddOperations(OperatorType.Binary | OperatorType.Infix | OperatorType.Comparison, 1,
-            new[]{"::", ">", "<", ">=", "≥", "<=", "≤", "==", "===", "≡", "!=", "≠", "!==", "≢", "∈", "∉", 
+            new[]{">", "<", ">=", "≥", "<=", "≤", "==", "===", "≡", "!=", "≠", "!==", "≢", "∈", "∉", 
                 "∋", "∌", "⊆", "⊈", "⊂", "⊄", "⊊", "∝", "∊", "∍", "∥", "∦", "∷", "∺", "∻", "∽", "∾", "≁", "≃", 
                 "≂", "≄", "≅", "≆", "≇", "≈", "≉", "≊", "≋", "≌", "≍", "≎", "≐", "≑", "≒", "≓", "≖", "≗", "≘", 
                 "≙", "≚", "≛", "≜", "≝", "≞", "≟", "≣", "≦", "≧", "≨", "≩", "≪", "≫", "≬", "≭", "≮", "≯", "≰", "≱", 
@@ -130,10 +129,10 @@ public class SpinorOperator {
             var sym = so.Symbol.String;
             for(int i = 0, n = sym.Length; i < n; i++)
                 if (charBuffer[i] != sym[i])
-                    goto NEXT;
+                    goto NextOperator;
             sop = so;
             return true;
-            NEXT:;
+            NextOperator:;
         }
         sop = default;
         return false;

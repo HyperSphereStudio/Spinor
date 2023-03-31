@@ -6,36 +6,41 @@
 
 using System;
 using System.Reflection;
-using Core;
-using Module = Core.Module;
+using runtime.core.internals;
+using runtime.ILCompiler;
+using runtime.stdlib;
+using Module = runtime.stdlib.Module;
 
 namespace runtime.core.type;
 
 using static TypeAttributes;
 
-public enum BuiltinType : byte {
-   None,
-   
-   SignedInteger,
-   UnsignedInteger,
-   FloatingNumber,
-   Exception,
-   
-   NumericStart = SignedInteger,
-   NumericEnd = FloatingNumber
+public sealed class AbstractType : SType {
+   public AbstractType(Symbol name, SType super, Module module, int specificity, Type type) : 
+      base(name, super, module, 0, specificity, 
+         new TypeLayout(0, type, null, null, null)) {}
 }
 
-public sealed class AbstractType : SType {
-   public readonly BuiltinType Builtin;
-
-   internal AbstractType(Symbol name, AbstractType super, Module module, Type underlyingType, BuiltinType builtin) : base(name, super, module, underlyingType, false) => Builtin = builtin;
+public class AbstractTypeBuilder : STypeBuilder{
+   public int Specificity => Super.Specificity + 1;
    
-   internal static AbstractType Create(Symbol name, AbstractType super, CompileTimeModule module, BuiltinType builtinType = BuiltinType.None) {
-      super ??= Any.RuntimeType;
-      var ty = module.ModuleBuilder.DefineType(module.GetFullName(name), Interface | Public | Abstract);
-      ty.AddInterfaceImplementation(super.UnderlyingType);
-      var aty = new AbstractType(name, super, module, ty, builtinType);
-      aty.Initialize();
-      return aty;
+   public AbstractTypeBuilder() {}
+   
+   public override AbstractType Create() {
+      var ty = Spinor.Root.ModuleScope.DefineType(Module.GetFullName(Name), Interface | Public | Abstract);
+      ty.AddInterfaceImplementation(typeof(IAny));
+      return (AbstractType) base.Create(ty);
+   }
+
+   protected override SType InitializeType(Type underlyingType) => new AbstractType(Name, Super, Module, Specificity, underlyingType);
+   protected override void WriteInitialization(Type underlyingType, IlExprBuilder ti, FieldInfo moduleField) {
+       ti.Load
+          .Field(moduleField)
+          .String(Name.String);
+       ti.Function.Invoke(Super.GetRuntimeTypeMethod);
+       ti.Load
+          .Int32(Specificity)
+          .Type(underlyingType);
+       ti.Function.Invoke(Reflect.Module_InitializeAbstractType, true);
    }
 }

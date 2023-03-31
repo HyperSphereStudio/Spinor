@@ -2,25 +2,30 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Core;
 using HyperSphere;
+using runtime.core.internals;
 using runtime.parse;
+using runtime.stdlib;
+using runtime.Utils;
 
-using static runtime.core.Spinor;
+namespace runtime.core.parse;
 
-namespace runtime.core.Compilation;
-
-public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrErrorListener<int>
-{
-    private bool _init;
+public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrErrorListener<int> {
     private string _file;
     private bool _createLineNumberNodes = true;
     public static int DisplayLineCharWidth = 40;
 
-    public ExprParser() : base(new CommonTokenStream(CreateSpinorLexer())) {}
+    public ExprParser() : base(new CommonTokenStream(new SpinorLexer(null))) {
+        base.RemoveErrorListeners();
+        base.AddErrorListener(this);
+        Lexer.RemoveErrorListeners();
+        Lexer.AddErrorListener(this);
+    }
 
     public Any Parse(string s, string file = null, bool createLineNumberNodes = true) =>
         Parse(new AntlrInputStream(s), file, createLineNumberNodes);
@@ -29,86 +34,88 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
         Parse(new AntlrFileStream(file.FullName), file.FullName, createLineNumberNodes);
 
     public Any Parse(BaseInputCharStream stream, string file = null, bool createLineNumberNodes = true) {
-        if (!_init) {
-            RemoveErrorListeners();
-            AddErrorListener(this);
-            SetInput(stream);
-            Lexer.RemoveErrorListeners();
-            Lexer.AddErrorListener(this);
-            _init = true;
-        }else SetInput(stream);
-        
+        SetInput(stream);
         _file = file;
         _createLineNumberNodes = createLineNumberNodes;
-        Debug();
-        var ctx = topExpr();
-        return ctx.ChildCount == 0 ? null : Parse(ASTSymbols.Block, ctx.exprBlock(), true);
+        return Parse(ASTSymbols.Block, topExpr().exprBlock());
     }
-
-    private Any Parse(PrimitiveExprContext ctx)
-    {
-        return ctx switch
-        {
+    
+    private Any Parse(PrimitiveExprContext ctx) {
+        return ctx switch {
+            null => Spinor.Nothing,
             BlockContext b => Parse(b),
             StructContext s => Parse(s),
             ModuleContext m => Parse(m),
             LiteralExprContext l => Parse(l.literal()),
-            NameExprContext n => Parse(n.Name()),
+            NameContext n => Parse(n),
             TupleExprContext t => Parse(t.tuple()),
             FunctionCallContext f => Parse(f),
-            PrimitiveContext p => Parse(p),
-            AbstractOrBuiltinContext a => Parse(a),
+            AbstractContext a => Parse(a),
+            UsingContext u => Parse(u),
+            ImportExprContext i => Parse(i),
             _ => throw new SpinorException("Unknown Expression " + ctx.GetText())
         };
     }
-
-    private Expr Parse(FunctionCallContext ctx)
-    {
+    private Expr Parse(FunctionCallContext ctx) {
+        var funcName = Parse(ctx.ExprName());
         var t = ctx.tuple().expr();
-        Expr e = new(ASTSymbols.Call, new List<Any>(1 + t.Length));
-        e.Args.Add(Parse(ctx.Name()));
-        foreach (var a in t)
-            e.Args.Add(Parse(a));
+        var list = new List<Any>(t.Length + 1);
+        Expr e = new(ASTSymbols.Call, list);
+        list.Add(funcName);
+        list.AddRange(t.Select(Parse));
         return e;
     }
 
-    private Any Parse(BinaryExprContext ctx) {
-        var op = (SpinorOperatorToken) ctx.BinaryOrAssignableOp().Symbol;
-        var e = ParseBinaryOrAssignment(op, Parse(ctx.lhs), Parse(ctx.rhs));
+    private Any Parse(UsingContext ctx) => ParseUsingOrImportArgs(ASTSymbols.Using, ctx.SYSTEM()!=null, ctx.UsingName());
 
-        foreach (var a in ctx.binaryExpr()) {
-            var newOp = (SpinorOperatorToken) a.BinaryOrAssignableOp().Symbol;
-            if (op.Operator.Chainable && op.Equals(newOp))
-                e.Args.Add(Parse(a));    
+    private Any Parse(NameContext ctx) {
+        if (ctx.elemOf == null)
+            return Parse(ctx.ExprName());
+        return new Expr(ASTSymbols.ElementOf, Parse(ctx.ExprName()), Parse(ctx.elemOf));
+    }
+    private Any ParseUsingOrImportArgs(Symbol head, bool isSystem, ITerminalNode[] names) {
+        var list = new List<Any>(names.Length + 1);
+        list.Add(isSystem);
+        foreach(var n in names)
+            list.Add(Parse(n));
+        return new Expr(head, list);
+    }
+
+    private Any Parse(PrimitiveExprContext first, ITerminalNode[] bops, ExprContext[] terms) {
+        var lastOp = (SpinorOperatorToken) bops[0].Symbol;
+        var ex = ParseBinaryOrAssignment(lastOp, Parse(first), Parse(terms[0]));
+        var headEx = ex;
+        for (int i = 1, n = bops.Length; i < n; i++) {
+            var op = (SpinorOperatorToken) bops[i].Symbol;
+            var rhs = Parse(terms[i]);
+            if (op.Operator.Chainable && op.OperatorType == lastOp.OperatorType)
+                ex.Args.Add(rhs);
             else {
-                op = newOp;
-                e = ParseBinaryOrAssignment(op, e, Parse(a));
+                ex = ParseBinaryOrAssignment(op, ex, rhs);
+                lastOp = op;
             }
         }
-        return e;
+        return headEx;
     }
     
     private Any Parse(ExprContext ctx) {
-        var pe = ctx.primitiveExpr();
-        return pe != null ? Parse(pe) : Parse(ctx.binaryExpr());
+        var binaryOps = ctx.BinaryOrAssignableOp();
+        return binaryOps.Length == 0 ? Parse(ctx.primitiveExpr()) : Parse(ctx.primitiveExpr(), binaryOps, ctx.expr());
     }
 
     private Expr ParseBinaryOrAssignment(SpinorOperatorToken opTok, Any lhs, Any rhs) =>
         opTok.OperatorKind == OperatorKind.Binary
-            ? new(ASTSymbols.Call, (Symbol)opTok.Text, lhs, rhs)
+            ? new(ASTSymbols.Call, opTok.Operator.Symbol, lhs, rhs)
             : new((Symbol) opTok.Text, lhs, rhs);
 
-    private Any Parse(BlockContext ctx) =>
-        Parse(ctx.head.Type == BEGIN ? ASTSymbols.Block : ASTSymbols.Quote, ctx.exprBlock());
+    private Any Parse(BlockContext ctx) => Parse(ctx.head.Type == BEGIN ? ASTSymbols.Block : ASTSymbols.Quote, ctx.exprBlock());
 
-    private void CreateLineNode(Expr e, IToken terminationToken)
-    {
+    private void CreateLineNode(Expr e, IToken terminationToken) {
         if (_createLineNumberNodes)
             e.Args.Add(new LineNumberNode(terminationToken.Line, _file));
     }
 
-    private Any Parse(TupleContext ctx)
-    {
+    private Any Parse(TupleContext ctx) {
         var ex = ctx.expr();
         return ex.Length == 1
             ? Parse(ex[0])
@@ -116,62 +123,58 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
             new Expr(ASTSymbols.Tuple, ctx.expr().Select(Parse).ToList());
     }
 
-    private Any Parse(Symbol head, ExprBlockContext ctx, bool canCollapse = false)
-    {
-        var exs = ctx.expr();
-        if (canCollapse && exs.Length == 1)
-            return Parse(exs[0]);
-
+    private Any Parse(Symbol head, ExprBlockContext ctx) {
         var ex = new Expr(head, new List<Any>(ctx.ChildCount));
+        if (ctx.ChildCount == 0)
+            return ex;
         foreach (var e in ctx.children) {
-            if (e is ITerminalNode it && it.Symbol.Type == Termination)
+            if (e is ITerminalNode it && it.Symbol.Type == ExprTermination)
                 CreateLineNode(ex, it.Symbol);
             else
-                ex.Args.Add(Parse((ExprContext)e));
+                ex.Args.Add(Parse((ExprContext) e));
         }
-
         return ex;
     }
 
-    private Symbol Parse(ITerminalNode symbolNode) => (Symbol) symbolNode.GetText();
-    private Symbol Parse(IToken symbolNode) => (Symbol) symbolNode.Text;
+    private Symbol Parse(ITerminalNode symbolNode) => symbolNode == null ? null : (Symbol) symbolNode.GetText();
 
-    private Expr Parse(PrimitiveContext ctx) {
-        Any e = Parse(ctx.name);
-        if (ctx.extends != null)
-            e = new Expr(ASTSymbols.Extends, e, Parse(ctx.extends));
-        return new Expr(ASTSymbols.Primitive, e, Parse(ctx.integer()));
-    }
+    /**Expr(:abstract, name, extension?)**/
+    private Expr Parse(AbstractContext ctx) => new(ASTSymbols.Abstract, Parse(ctx.TypeName()), Parse(ctx.ext));
 
-    private Expr Parse(AbstractOrBuiltinContext ctx) {
-        Any e = Parse(ctx.name);
-        if (ctx.extends != null)
-            e = new Expr(ASTSymbols.Extends, e, Parse(ctx.extends));
-        return new Expr( ctx.ABSTRACT() != null ? ASTSymbols.Abstract : ASTSymbols.Builtin, e);
-    }
-    
+    /**Expr(:module, isNotBare, name, block)**/
     private Expr Parse(ModuleContext m) => new(ASTSymbols.Module,
-        Box(m.bare == null),
-        Parse(m.Name()),
+        m.BareModule() == null,
+        Parse(m.ModuleName()),
         Parse(ASTSymbols.Block, m.exprBlock()));
 
-    private Expr Parse(StructContext s) => new(
-        ASTSymbols.Struct,
-        Box(s.mutable != null),
-        Parse(s.Name()),
+    /**Expr(:struct, isMutable, name, extension?, block)**/
+    private Expr Parse(StructContext s) => new(ASTSymbols.Struct,
+        s.MUTABLE() != null,
+        Parse(s.TypeName()),
+        Parse(s.ext),
         Parse(ASTSymbols.Block, s.exprBlock()));
 
     private Any Parse(LiteralContext l) {
-        return l.GetChild(0) switch {
-            FloatContext f => Parse(f),
+        return l switch {
+            FloatingPointContext f => Parse(f),
             IntegerContext i => Parse(i),
+            SymbolContext s => Parse(s),
+            StrContext s => Parse(s.@string()),
             _ => throw new SpinorException("Unknown Literal " + l)
         };
     }
-    
-    private Any Parse(IntegerContext ic) => Box(long.Parse(ic.GetText()));
-    private Any Parse(FloatContext fc) => Box(double.Parse(fc.GetText()));
+    private Any Parse(StringContext s) {
+        var parts = s.stringPart();
+        // if (parts.Length == 1 && parts[0] is StrTextContext strCtx)
+         //   return strCtx.GetText();
+        var x = new Expr(ASTSymbols.String);
+        return default;
+    }
+    private Any Parse(IntegerContext ic) => long.Parse(ic.GetText());
+    private Any Parse(FloatingPointContext fc) => double.Parse(fc.GetText());
+    private Symbol Parse(SymbolContext s) => Parse(s.ExprSymbol());
 
+    #region Debugging
     private void ParserException(string msg, int line, int charPosInLine) {
         var ts = TokenStream;
         if (charPosInLine == -1)
@@ -199,12 +202,12 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
         }
         
         end = Math.Min(end, start + DisplayLineCharWidth);
-        Interval textInterval = new Interval(start + 1, end - 1);
-        string lineWindow = tc.GetText(textInterval);
-        string errorLink = _file == null ? "" : new Uri(Path.GetFullPath(_file)).ToString();
+        var textInterval = new Interval(start + 1, end - 1);
+        var lineWindow = tc.GetText(textInterval);
+        var errorLink = _file == null ? "" : new Uri(Path.GetFullPath(_file)).ToString();
         
         //Create Arrows of Offending Token Location
-        string errorBars = new string(' ', charPosInLine) + '^';
+        var errorBars = new string(' ', charPosInLine) + '^';
 
         throw new SpinorException("Spinor Parsing Error:\t{0}\n:> {1} {2}:{3}\n\n{4}\n\t{5}", 
             msg, errorLink, line, charPosInLine, lineWindow, errorBars);
@@ -215,20 +218,31 @@ public class ExprParser : SpinorParser, IAntlrErrorListener<IToken>, IAntlrError
     public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line,
         int charPositionInLine, string msg, RecognitionException e) => ParserException(msg, line, charPositionInLine);
 
-    private void Debug()
-    {
-        PrintToken(Lexer.Token);
-        foreach (var t in Lexer.GetAllTokens())
-            PrintToken(t);
-        Lexer.Reset();
+    private void Debug() {
+        DebugLexer();
+        DebugParser();
+    }
+
+    private void DebugLexer() {
+        try {
+            PrintToken(Lexer.Token);
+            for (var t = Lexer.NextToken(); t.Type != -1; t = Lexer.NextToken())
+                PrintToken(t);
+            Lexer.Reset();
+        }
+        catch (Exception) {
+            Console.Error.WriteLine("\n\n\n##LEXER CRASH##");
+            Console.Write("Lexer Modes:");
+            Lexer.ModeStack.Select(x => Lexer.ModeNames[x]).ToArray().PrintLn(Console.Out);
+            Console.WriteLine($"Current:{Lexer.ModeNames[Lexer.CurrentMode]}");
+            throw;
+        }
+    }
+
+    private void DebugParser() {
         PrintSyntaxTree(this, topExpr()).PrintLn();
         Reset();
     }
-
-    private static SpinorLexer CreateSpinorLexer()
-    {
-        var sl = new SpinorLexer(null);
-        sl.Initialize();
-        return sl;
-    }
+    
+    #endregion
 }

@@ -53,13 +53,6 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFunctionCall([NotNull] SpinorParser.FunctionCallContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitStruct([NotNull] SpinorParser.StructContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>module</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
@@ -67,19 +60,19 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitModule([NotNull] SpinorParser.ModuleContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>primitive</c>
+	/// Visit a parse tree produced by the <c>struct</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitPrimitive([NotNull] SpinorParser.PrimitiveContext context);
+	Result VisitStruct([NotNull] SpinorParser.StructContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>abstractOrBuiltin</c>
+	/// Visit a parse tree produced by the <c>abstract</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context);
+	Result VisitAbstract([NotNull] SpinorParser.AbstractContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>block</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
@@ -95,12 +88,26 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTupleExpr([NotNull] SpinorParser.TupleExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>nameExpr</c>
+	/// Visit a parse tree produced by the <c>name</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitNameExpr([NotNull] SpinorParser.NameExprContext context);
+	Result VisitName([NotNull] SpinorParser.NameContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>using</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitUsing([NotNull] SpinorParser.UsingContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>importExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitImportExpr([NotNull] SpinorParser.ImportExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>literalExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
@@ -108,12 +115,6 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitLiteralExpr([NotNull] SpinorParser.LiteralExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitBinaryExpr([NotNull] SpinorParser.BinaryExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="SpinorParser.expr"/>.
 	/// </summary>
@@ -127,22 +128,65 @@ public interface ISpinorParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTuple([NotNull] SpinorParser.TupleContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="SpinorParser.integer"/>.
+	/// Visit a parse tree produced by <see cref="SpinorParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitString([NotNull] SpinorParser.StringContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>StrText</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStrText([NotNull] SpinorParser.StrTextContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>StrNameInterp</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStrNameInterp([NotNull] SpinorParser.StrNameInterpContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>StrExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStrExpr([NotNull] SpinorParser.StrExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>floatingPoint</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFloatingPoint([NotNull] SpinorParser.FloatingPointContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>integer</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitInteger([NotNull] SpinorParser.IntegerContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="SpinorParser.float"/>.
+	/// Visit a parse tree produced by the <c>symbol</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitFloat([NotNull] SpinorParser.FloatContext context);
+	Result VisitSymbol([NotNull] SpinorParser.SymbolContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="SpinorParser.literal"/>.
+	/// Visit a parse tree produced by the <c>str</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitLiteral([NotNull] SpinorParser.LiteralContext context);
+	Result VisitStr([NotNull] SpinorParser.StrContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="SpinorParser.importName"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitImportName([NotNull] SpinorParser.ImportNameContext context);
 }
 } // namespace HyperSphere

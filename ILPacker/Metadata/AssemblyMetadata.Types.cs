@@ -8,9 +8,9 @@ namespace Lokad.ILPack.Metadata
     {
         public EntityHandle GetTypeHandle(Type type, Boolean inMethodBodyWritingContext = false)
         {
-            if (TryGetTypeDefinition(type, out var metadata))
-            {
-                return inMethodBodyWritingContext ? ResolveTypeReference(type) : metadata.Handle;
+            if (TryGetTypeDefinition(type, out var metadata)) {
+                //inMethodBodyWritingContext ? ResolveTypeReference(type) : 
+                return metadata.Handle;
             }
 
             return ResolveTypeReference(type);

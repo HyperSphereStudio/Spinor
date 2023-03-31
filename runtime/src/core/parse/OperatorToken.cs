@@ -5,8 +5,9 @@
 */
 
 using Antlr4.Runtime;
+using HyperSphere;
 using runtime.core;
-using runtime.core.Compilation;
+using runtime.core.math;
 
 namespace runtime.parse;
 
@@ -15,7 +16,7 @@ public enum OperatorKind : byte {
     Assignment
 }
 
-public record SpinorOperatorToken(ushort OperatorType, int Type, int Line, int Column, OperatorKind OperatorKind) : IToken{
+public record SpinorOperatorToken(ushort OperatorType, int Line, int Column, OperatorKind OperatorKind) : IToken{
     public SpinorOperator Operator => SpinorOperator.GetOpFromToken(OperatorType);
     public string Text {
         get {
@@ -25,8 +26,8 @@ public record SpinorOperatorToken(ushort OperatorType, int Type, int Line, int C
             return sym;
         }
     }
-    
-    public int Channel => -1;
+    public int Type => SpinorLexer.BinaryOrAssignableOp;
+    public int Channel => SpinorLexer.DefaultTokenChannel;
     public int TokenIndex => -1;
     public int StartIndex => -1;
     public int StopIndex => -1;

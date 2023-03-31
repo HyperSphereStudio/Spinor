@@ -9,9 +9,9 @@ namespace Lokad.ILPack.Metadata
         public EntityHandle GetConstructorHandle(ConstructorInfo ctor, Boolean inMethodBodyWritingContext = false)
         {
             if (ctor.DeclaringType?.IsConstructedGenericType == false &&
-                TryGetConstructorDefinition(ctor, out var metadata))
-            {
-                return inMethodBodyWritingContext ? ResolveConstructorReference(ctor) : metadata.Handle;
+                TryGetConstructorDefinition(ctor, out var metadata)) {
+               //inMethodBodyWritingContext ? ResolveConstructorReference(ctor) : 
+                return metadata.Handle;
             }
 
             if (IsReferencedType(ctor.DeclaringType) ||

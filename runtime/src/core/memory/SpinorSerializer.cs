@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Core;
+using runtime.stdlib;
 using runtime.Utils;
 
 namespace runtime.core.memory;
@@ -23,7 +24,7 @@ public class SpinorSerializer {
 
    private readonly InternContainer<Any> _refVals = new();
 
-   public void Serialize(Any a) {
+   public void Serialize(ISpinorAny a) {
        Write(RegisterType(a.Type));
        a.Serialize(this);
    }

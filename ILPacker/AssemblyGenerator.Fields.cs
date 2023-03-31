@@ -52,7 +52,7 @@ namespace Lokad.ILPack
                 var bytes = new byte[Marshal.SizeOf(field.FieldType)];
 
                 // Create a dynamic method
-                var method = new DynamicMethod("getInitData", typeof(void), new System.Type[] {typeof(byte[]) }, true);
+                var method = new DynamicMethod("getInitData", typeof(void), new [] {typeof(byte[]) }, true);
                 var il = method.GetILGenerator();
                 il.Emit(OpCodes.Ldarg_0);               // Load "bytes"
                 il.Emit(OpCodes.Ldtoken, field);        // Token for the field

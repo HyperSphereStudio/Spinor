@@ -7,14 +7,15 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Core;
+namespace runtime.stdlib;
 
-public sealed class Symbol : IAny{
+public sealed class Symbol : ISpinorAny{
     private static readonly Dictionary<string, Symbol> InternStrings = new();
     
     public readonly string String;
     private readonly int _hash;
-    public static SType RuntimeType { get; set; }
+
+    public static SType RuntimeType { get; internal set; }
     public SType Type => RuntimeType;
 
     private Symbol(string s) {
@@ -33,8 +34,9 @@ public sealed class Symbol : IAny{
     public static explicit operator Symbol(string s) => Create(s);
     public override int GetHashCode() => _hash;
     public override string ToString() => String;
-    public void Print(TextWriter tw) => tw.Write(String);
-
+    void IAny.Print(TextWriter tw) => tw.Write(String);
+    public static implicit operator Any(Symbol s) => new(s);
+    public static implicit operator Symbol(Any a) => (Symbol) a.Value;
 }
 
 public static class ASTSymbols
@@ -42,6 +44,7 @@ public static class ASTSymbols
     public static readonly Symbol
         Empty = (Symbol) "",
         Call = (Symbol) "call",
+        SysCall = (Symbol) "syscall",
         Invoke = (Symbol) "invoke",
         Quote = (Symbol) "quote",
         Block = (Symbol) "block",
@@ -49,11 +52,16 @@ public static class ASTSymbols
         Module = (Symbol) "module",
         Tuple = (Symbol) "tuple",
         Assign = (Symbol) "=",
-        Primitive = (Symbol) "primitive",
         Abstract = (Symbol) "abstract",
         Extends = (Symbol) "<:",
-        Builtin = (Symbol) "builtin",
-        Colon = (Symbol) "::";
+        System = (Symbol) "system",
+        ElementOf = (Symbol) "::",
+        Using = (Symbol) "using",
+        Import = (Symbol) "import",
+        Dot = (Symbol) ".",
+        String = (Symbol) "string",
+        As = (Symbol) "as",
+        CurrentModule = (Symbol) "__module__";
 }
 
 public static class CommonSymbols
@@ -66,9 +74,5 @@ public static class CommonSymbols
         Type = (Symbol) "Type",
         Union = (Symbol) "Union",
         TypeVar = (Symbol) "TypeVar",
-        Integer = (Symbol) "Integer",
-        AbstractFloat = (Symbol) "AbstractFloat",
-        Signed = (Symbol) "Signed",
-        Unsigned = (Symbol) "Unsigned",
-        Exception = (Symbol) "Exception";
+        System = (Symbol) "System";
 }

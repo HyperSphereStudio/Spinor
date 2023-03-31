@@ -5,28 +5,18 @@
 */
 
 using System;
-using System.IO;
-using System.Reflection;
-using System.Reflection.Emit;
 using runtime.core;
+using runtime.core.internals;
+using runtime.stdlib;
 
 namespace sandbox;
 
 public static class Program {
-    private static void ProblemCode() {
-        var name = new AssemblyName("Test");
-        var asm = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
-        var mb = asm.DefineDynamicModule("Test");
-    }
-    
     static void Main(string[] args) {
-        try {
-            Spinor.Init(); 
-         
-        }catch (SpinorException e) {
-            e.Print();
-        }
+        Any a = 2;
+        
+        Spinor.Core[(Symbol) "test"].PrintLn();
+        
         Spinor.Exit();
     }
-    
 }

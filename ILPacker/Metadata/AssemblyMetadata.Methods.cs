@@ -14,7 +14,8 @@ namespace Lokad.ILPack.Metadata
             if (method.DeclaringType?.IsConstructedGenericType == false &&
                 TryGetMethodDefinition(method, out var metadata))
             {
-                return inMethodBodyWritingContext ? ResolveMethodReference(method) : metadata.Handle;
+                //inMethodBodyWritingContext ? ResolveMethodReference(method) : 
+                return metadata.Handle;
             }
 
             if (method.IsConstructedGenericMethod() ||

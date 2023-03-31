@@ -4,29 +4,33 @@
    * Last Modified : Monday, January 2, 2023
 */
 
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
-using runtime.core.Compilation;
-using runtime.core.parse;
-using runtime.core.type;
-using runtime.stdlib;
-using runtime.Utils;
+using runtime.core.compilation.interp;
+using runtime.core.internals;
+using runtime.core.math;
 
-namespace Core;
+namespace runtime.stdlib;
 
-public interface IExpr<TAny> {
+public interface IExpr<out TAny> {
     public Symbol Head { get; }
     public int ArgCount { get; }
     public TAny this[int i] { get; }
 }
 
-public class Expr : IAny, IExpr<Any>{
+public class Expr : ISpinorAny, IExpr<Any>{
     public Symbol Head { get; }
     public readonly List<Any> Args;
     public int ArgCount => Args.Count;
     public Any this[int i] => Args[i];
-    public static SType RuntimeType { get; set; }
+    
+    public static SType RuntimeType { get; } = 
+        Spinor.Core.InitializeStructType(SpinorTypeAttributes.Class, "Expr", 
+            Any.RuntimeType, 1, null, 
+            new TypeLayout(0, typeof(Expr), new SpinorField[2], null, null));
+    
     public SType Type => RuntimeType;
 
     public Expr() => Args = new();
@@ -39,37 +43,42 @@ public class Expr : IAny, IExpr<Any>{
         Args = body;
     }
 
-    public override string ToString() {
-        StringWriter sw = new();
-        Print(sw);
-        return sw.ToString();
-    }
-    
-    public void Print(TextWriter tw) {
+    void IAny.Print(TextWriter tw) {
         tw.Write("Expr(:");
         tw.Write(Head);
-        tw.Write(", ");
-        Args.Print(tw);
-        tw.Write(")");
+        tw.Write(", Any[");
+        for (var i = 0; i < Args.Count; i++) {
+            if(i != 0)
+                tw.Write(", ");
+            Args[i].Print(tw);
+        }
+        tw.Write("])");
     }
 
+    public override string ToString() => ((IAny) this).String();
+    public static implicit operator Any(Expr e) => new(e);
+    public static implicit operator Expr(Any a) => a.Cast<Expr>();
+    
     public void WriteCode(TextWriter tw) => new ExprExprWalker(tw).WalkExpr(this);
     private class ExprExprWalker : AbstractSpinorExprWalker {
         private readonly IndentedTextWriter _tw;
+        private bool _innerExpr;
 
         public ExprExprWalker(TextWriter tw) => _tw = new(tw);
         
-        public void WalkExpr(Any a, bool innerExpr = false) => Walk(a, innerExpr);
-        public override void WalkCall(Symbol function, ExprArgWalker<Any, Expr> args) {
-            _tw.Write(function);
+        public void WalkExpr(Any a) => Walk(a);
+        public override void WalkCall(Expr function, ExprArgWalker<Any, Expr> args) {
+            Walk(function);
             WalkTuple(args);
         }
-        public override void WalkOperatorCall(bool innerExpr, SpinorOperator op, ExprArgWalker<Any, Expr> args) {
+        public override void WalkOperatorCall(SpinorOperator op, ExprArgWalker<Any, Expr> args) {
+            var isInnerExpr = _innerExpr;
             if (op.Unary) {
                 _tw.Write(op.Symbol);
-                Walk(args[0], true);
+                _innerExpr = true;
+                Walk(args[0]);
             }else if(op.Binary) {
-                if(innerExpr)
+                if(isInnerExpr)
                     _tw.Write('(');
                 while (args.MoveNext()) {
                     if (args.Index != args.StartIdx) {
@@ -77,11 +86,13 @@ public class Expr : IAny, IExpr<Any>{
                         _tw.Write(op.Symbol);
                         _tw.Write(' ');
                     }
-                    Walk(args.Current, true);
+                    _innerExpr = true;
+                    Walk(args.Current);
                 }
-                if(innerExpr)
+                if(isInnerExpr)
                     _tw.Write(')');
             }
+            _innerExpr = isInnerExpr;
         }
         public override void WalkAssignment(SpinorOperator op, Any lhs, Any rhs) {
             Walk(lhs);
@@ -99,14 +110,17 @@ public class Expr : IAny, IExpr<Any>{
             WalkBlock(name, new(block, 0));
             _tw.Write("end");
         }
-        public override void WalkStruct(StructKind kind, Symbol name, Symbol extends, Expr block) {
-            switch (kind) {
-                case StructKind.Mutable:
-                    _tw.Write("mutable");
-                    break;
-            }
+        public override void WalkStruct(SpinorTypeAttributes type, Symbol name, Any extends, Expr block) {
+            if(type.HasFlag(SpinorTypeAttributes.Mutable))
+                _tw.Write("mutable");
             
             _tw.Write("struct ");
+
+            if (!extends.IsNothing) {
+                _tw.Write(":<");
+                Walk(extends);
+            }
+
             WalkBlock(name, new(block, 0));
             _tw.Write("end");
         }
@@ -129,28 +143,27 @@ public class Expr : IAny, IExpr<Any>{
             _tw.Write(')');
         }
         public override void WalkLineNumberNode(int line, string file) => _tw.WriteLine("\t#= " + line + ':' + file + "=#");
-        public override void WalkAbstractType(Symbol name, Symbol extends, BuiltinType builtinType) {
-            _tw.Write(builtinType == BuiltinType.None ? "abstract" : "abstractbuiltin");
-            _tw.Write(" type ");
+        public override void WalkAbstractType(Symbol name, Any extends) {
+            _tw.Write("abstract ");
+            _tw.Write("type ");
             _tw.Write(name);
-            if (extends != null) {
+            if (!extends.IsNothing) {
                 _tw.Write(" <: ");
-                _tw.Write(extends);
+                Walk(extends);
             }
             _tw.Write(" end");
         }
-        public override void WalkPrimitiveType(Symbol name, int bits, Symbol extends) {
-            _tw.Write("primitive type ");
-            _tw.Write(name);
-            if (extends != null) {
-                _tw.Write(" <: ");
-                _tw.Write(extends);
-            }
-            _tw.Write(' ');
-            _tw.Write(bits);
-            _tw.Write(" end");
+
+        public override void WalkUsing(bool isSystem, ExprArgWalker<Any, Expr> n) {
+            if(isSystem)
+                _tw.Write("system ");
+            _tw.Write("using ");
+            Walk(n.Expr);
         }
+
+        public override void WalkName(Symbol s) => _tw.Write(s);
         public override void WalkSymbol(Symbol s) => _tw.Write(s);
+        public override void WalkNothing() => _tw.Write("nothing");
         public override void WalkBool(bool b) => _tw.Write(b);
         public override void WalkInteger(long l) => _tw.Write(l);
         public override void WalkFloat(double d) => _tw.Write(d);

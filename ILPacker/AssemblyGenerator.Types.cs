@@ -28,14 +28,12 @@ namespace Lokad.ILPack
 
             // Reserve types
             foreach (var type in types) {
-                if(!type.Name.StartsWith("__boot__"))
-                    ReserveType(type, ref offsets);
+                ReserveType(type, ref offsets);
             }
 
             // Create types
             foreach (var type in types) {
-                if(!type.Name.StartsWith("__boot__"))
-                    CreateType(type, genericParams);
+                CreateType(type, genericParams);
             }
         }
 

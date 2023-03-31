@@ -65,18 +65,6 @@ public interface ISpinorParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitFunctionCall([NotNull] SpinorParser.FunctionCallContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterStruct([NotNull] SpinorParser.StructContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>struct</c>
-	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitStruct([NotNull] SpinorParser.StructContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>module</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
@@ -89,29 +77,29 @@ public interface ISpinorParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitModule([NotNull] SpinorParser.ModuleContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>primitive</c>
+	/// Enter a parse tree produced by the <c>struct</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterPrimitive([NotNull] SpinorParser.PrimitiveContext context);
+	void EnterStruct([NotNull] SpinorParser.StructContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>primitive</c>
+	/// Exit a parse tree produced by the <c>struct</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitPrimitive([NotNull] SpinorParser.PrimitiveContext context);
+	void ExitStruct([NotNull] SpinorParser.StructContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>abstractOrBuiltin</c>
+	/// Enter a parse tree produced by the <c>abstract</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context);
+	void EnterAbstract([NotNull] SpinorParser.AbstractContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>abstractOrBuiltin</c>
+	/// Exit a parse tree produced by the <c>abstract</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitAbstractOrBuiltin([NotNull] SpinorParser.AbstractOrBuiltinContext context);
+	void ExitAbstract([NotNull] SpinorParser.AbstractContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>block</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
@@ -137,17 +125,41 @@ public interface ISpinorParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitTupleExpr([NotNull] SpinorParser.TupleExprContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>nameExpr</c>
+	/// Enter a parse tree produced by the <c>name</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterNameExpr([NotNull] SpinorParser.NameExprContext context);
+	void EnterName([NotNull] SpinorParser.NameContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>nameExpr</c>
+	/// Exit a parse tree produced by the <c>name</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitNameExpr([NotNull] SpinorParser.NameExprContext context);
+	void ExitName([NotNull] SpinorParser.NameContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>using</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUsing([NotNull] SpinorParser.UsingContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>using</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUsing([NotNull] SpinorParser.UsingContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>importExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterImportExpr([NotNull] SpinorParser.ImportExprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>importExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitImportExpr([NotNull] SpinorParser.ImportExprContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>literalExpr</c>
 	/// labeled alternative in <see cref="SpinorParser.primitiveExpr"/>.
@@ -160,16 +172,6 @@ public interface ISpinorParserListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitLiteralExpr([NotNull] SpinorParser.LiteralExprContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterBinaryExpr([NotNull] SpinorParser.BinaryExprContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="SpinorParser.binaryExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitBinaryExpr([NotNull] SpinorParser.BinaryExprContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="SpinorParser.expr"/>.
 	/// </summary>
@@ -191,34 +193,108 @@ public interface ISpinorParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitTuple([NotNull] SpinorParser.TupleContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SpinorParser.integer"/>.
+	/// Enter a parse tree produced by <see cref="SpinorParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterString([NotNull] SpinorParser.StringContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SpinorParser.string"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitString([NotNull] SpinorParser.StringContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>StrText</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStrText([NotNull] SpinorParser.StrTextContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StrText</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStrText([NotNull] SpinorParser.StrTextContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>StrNameInterp</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStrNameInterp([NotNull] SpinorParser.StrNameInterpContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StrNameInterp</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStrNameInterp([NotNull] SpinorParser.StrNameInterpContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>StrExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStrExpr([NotNull] SpinorParser.StrExprContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StrExpr</c>
+	/// labeled alternative in <see cref="SpinorParser.stringPart"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStrExpr([NotNull] SpinorParser.StrExprContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>floatingPoint</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterFloatingPoint([NotNull] SpinorParser.FloatingPointContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>floatingPoint</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitFloatingPoint([NotNull] SpinorParser.FloatingPointContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>integer</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void EnterInteger([NotNull] SpinorParser.IntegerContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SpinorParser.integer"/>.
+	/// Exit a parse tree produced by the <c>integer</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitInteger([NotNull] SpinorParser.IntegerContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SpinorParser.float"/>.
+	/// Enter a parse tree produced by the <c>symbol</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterFloat([NotNull] SpinorParser.FloatContext context);
+	void EnterSymbol([NotNull] SpinorParser.SymbolContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SpinorParser.float"/>.
+	/// Exit a parse tree produced by the <c>symbol</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitFloat([NotNull] SpinorParser.FloatContext context);
+	void ExitSymbol([NotNull] SpinorParser.SymbolContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="SpinorParser.literal"/>.
+	/// Enter a parse tree produced by the <c>str</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterLiteral([NotNull] SpinorParser.LiteralContext context);
+	void EnterStr([NotNull] SpinorParser.StrContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="SpinorParser.literal"/>.
+	/// Exit a parse tree produced by the <c>str</c>
+	/// labeled alternative in <see cref="SpinorParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitLiteral([NotNull] SpinorParser.LiteralContext context);
+	void ExitStr([NotNull] SpinorParser.StrContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="SpinorParser.importName"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterImportName([NotNull] SpinorParser.ImportNameContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="SpinorParser.importName"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitImportName([NotNull] SpinorParser.ImportNameContext context);
 }
 } // namespace HyperSphere

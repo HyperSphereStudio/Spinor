@@ -10,22 +10,18 @@ using System.Text;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using HyperSphere;
-using runtime.core.Compilation;
+using runtime.core.math;
 using runtime.parse;
 
 namespace runtime.core.parse;
 
 public abstract class SuperSpinorParser : Parser {
-    public SpinorLexer Lexer { get; private set; }
+    public SpinorLexer Lexer { get; }
     private SpinorOperator GetOp(int lt) => ((SpinorOperatorToken) TokenStream.LT(lt)).Operator;
-    
-    protected int OperatorPrecedence => GetOp(1).Precedence;
-
     public bool TargetPrecedence(int i) {
-        Console.WriteLine("Test!");
-        int current_pres = OperatorPrecedence;
-        Console.WriteLine($"T:{current_pres} i:{i}");
-        return current_pres >= i;
+        if (TokenStream.LT(i) is SpinorOperatorToken st)
+            return st.Operator.Precedence >= i;
+        return false;
     }
 
     protected int NextOperatorPrecedence {
@@ -36,11 +32,13 @@ public abstract class SuperSpinorParser : Parser {
             return op.Precedence + 1;
         }
     }
+
+    protected SuperSpinorParser(ITokenStream input, TextWriter output, TextWriter errorOutput) : base(input, output,
+        errorOutput) {
+        Lexer = (SpinorLexer) ((CommonTokenStream) input).TokenSource;
+    }
     
-    protected SuperSpinorParser(ITokenStream input) : base(input) {}
-    protected SuperSpinorParser(ITokenStream input, TextWriter output, TextWriter errorOutput): base(input, output, errorOutput) {}
     protected void SetInput(BaseInputCharStream stream) {
-        Lexer = (SpinorLexer) ((CommonTokenStream) TokenStream).TokenSource;
         Lexer.SetInputStream(stream);
         Lexer.Reset();
         Reset();

@@ -32,8 +32,8 @@ public static class IO {
     public static void ErrLn(this string format, params object[] parameters) =>
         Console.Error.WriteLine(format, parameters);
     
-    public static void Print(this object o) => Console.Out.Write(o);
-    public static void PrintLn(this object o) => Console.Out.WriteLine(o);
+    public static void Print(this object o) => Console.Out.Write(o ?? "null");
+    public static void PrintLn(this object o) => Console.Out.WriteLine(o ?? "null");
     
     public static void Print(this string format, params object[] parameters) => Console.Out.Write(format, parameters);
 

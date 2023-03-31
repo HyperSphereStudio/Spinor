@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using runtime.core;
-using runtime.Utils;
+using runtime.ILCompiler;
 
-namespace runtime.ILCompiler;
+namespace runtime.core.compilation.ILCompiler;
+
+using static MethodAttributes;
 
 public struct ILTypeBuilder {
     public readonly TypeBuilder InternalBuilder;
@@ -37,7 +38,8 @@ public struct ILTypeBuilder {
 
     public IlExprBuilder ImplementBackedSetMethod(string name, FieldBuilder fb, MethodAttributes attr) => InternalBuilder.ImplementBackedSetMethod(name, fb, attr);
     public IlExprBuilder ImplementBackedGetMethod(string name, FieldBuilder fb, MethodAttributes attr) => InternalBuilder.ImplementBackedGetMethod(name, fb, attr);
-    
+    public IlExprBuilder CreateCastOperator(Type foreignType, bool isExplicit, bool convertToSource) =>
+        InternalBuilder.CreateCastOperator(foreignType, isExplicit, convertToSource);
 
     public Type Create() {
         if (HasTypeInitializer) {
@@ -60,9 +62,9 @@ public static class BuilderExtensions {
     public const MethodAttributes
         RequiredMethodAttributes = 0,
         
-        RequiredGetSetAttributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName,
+        RequiredGetSetAttributes = HideBySig | SpecialName,
         
-        RequiredConstructorAttributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+        RequiredConstructorAttributes = HideBySig | SpecialName;
 
     public const FieldAttributes 
         RequiredFieldAttributes = 0;
@@ -94,7 +96,7 @@ public static class BuilderExtensions {
         if(!fb.IsStatic)
             eb.Load.This(false);
         
-        eb.Load.FieldValue(fb);
+        eb.Load.Field(fb);
         eb.Return();
 
         return eb;
@@ -123,7 +125,7 @@ public static class BuilderExtensions {
         tb.AddInterfaceImplementation(type.MakeGenericType(generic_parameters));
         var gparams = type.GetGenericArguments();
         Dictionary<Type, Type> gparam2ParamMap = new(gparams.Length);
-        for(int i = 0; i < gparams.Length; i++)
+        for(var i = 0; i < gparams.Length; i++)
             gparam2ParamMap.Add(gparams[i], generic_parameters[i]);
 
         foreach (var it in type.GetInterfaces()) {
@@ -134,5 +136,46 @@ public static class BuilderExtensions {
             tb.AddInterfaceImplementation(it.GetGenericTypeDefinition().MakeGenericType(replacedGenerics.ToArray()));
         }
         
+    }
+    
+    public static IlExprBuilder CreateCastOperator(this TypeBuilder sourceType, Type foreignType, bool isExplicit, bool convertToSource)
+    {
+        var mb = sourceType.CreateMethod(isExplicit ? "op_Explicit" : "op_Implicit",
+            convertToSource ? sourceType : foreignType,
+            Public | Static | SpecialName | HideBySig,
+            convertToSource ? foreignType : sourceType);
+        
+        mb.DefineParameter(1, ParameterAttributes.None, "x");
+        return mb;
+    }
+    
+    public static MethodInfo GetCastOperator(this Type sourceType, Type foreign, bool isExplicit, bool convertToSource) {
+        var name = isExplicit ? "op_Explicit" : "op_Implicit";
+        const BindingFlags flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        return convertToSource ? sourceType.GetMethod(name, flags, new[] { foreign }) : sourceType.GetMethods(flags).First(mi => mi.Name == name && mi.ReturnType == foreign);
+    }
+
+    public static Type GetTupleType(int startIdx = 0, params Type[] t) {
+        var typeCount = Math.Min(8, t.Length - startIdx);
+        if (typeCount == 0)
+            return typeof(ValueTuple);
+
+        var typeChunks = new Type[typeCount];
+        for (var i = 0; i < typeCount; i++)
+            typeChunks[i] = t[i + startIdx];
+
+        if (typeCount <= 7)
+            return typeCount switch {
+                1 => typeof(ValueTuple<>).MakeGenericType(typeChunks),
+                2 => typeof(ValueTuple<,>).MakeGenericType(typeChunks),
+                3 => typeof(ValueTuple<,,>).MakeGenericType(typeChunks),
+                4 => typeof(ValueTuple<,,,>).MakeGenericType(typeChunks),
+                5 => typeof(ValueTuple<,,,,>).MakeGenericType(typeChunks),
+                6 => typeof(ValueTuple<,,,,,>).MakeGenericType(typeChunks),
+                7 => typeof(ValueTuple<,,,,,,>).MakeGenericType(typeChunks)
+            };
+        
+        typeChunks[7] = GetTupleType(7, typeChunks);
+        return typeof(ValueTuple<,,,,,,,>).MakeGenericType(typeChunks);
     }
 }
